@@ -1,9 +1,11 @@
 package edu.pnu.jwt.domain;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 import lombok.RequiredArgsConstructor;
 
 @Data
@@ -19,7 +21,8 @@ public class Member {
 	private String  rankA;
 	private String  manager;
 	private Integer contact;
-	private String  manageType;
+	@Enumerated(EnumType.STRING)
+	private ManageType manageType;
 	private String  userStat;
 	private String  userCreateDate;
 	

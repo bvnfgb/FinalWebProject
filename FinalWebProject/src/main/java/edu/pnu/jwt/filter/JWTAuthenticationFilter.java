@@ -36,7 +36,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 			// TODO: handle exception
 			e.printStackTrace();
 		}
-		Authentication authToken= new UsernamePasswordAuthenticationToken(member.getUsername(), member.getPassword());
+		Authentication authToken= new UsernamePasswordAuthenticationToken(member.getLoginId(), member.getLoginPassword());
 		System.out.println("authToken:"+authToken);
 		Authentication auth=authenticationManager.authenticate(authToken);
 		System.out.println("auth: "+ auth);
