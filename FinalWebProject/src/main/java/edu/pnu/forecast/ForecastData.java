@@ -1,4 +1,4 @@
-package edu.pnu.Forecast;
+package edu.pnu.forecast;
 
 import lombok.Data;
 @Data
