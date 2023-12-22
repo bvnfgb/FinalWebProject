@@ -48,10 +48,18 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 			Authentication authResult) throws IOException, ServletException {
 		// TODO Auto-generated method stub
 		User user=(User)authResult.getPrincipal();
-		String token=JWT.create().withExpiresAt(new Date(System.currentTimeMillis()+1000*60*10))
+		System.out.println(user+"user");
+		
+		String token=JWT.create().withExpiresAt(new Date(System.currentTimeMillis()+1000*60*60*24*7))
 				.withClaim("username",user.getUsername())
 				.sign(Algorithm.HMAC256("edu.pnu.jwt"));
+		
+		String refreshToken = JWT.create()
+	            .withExpiresAt(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 7)) // Refresh token expiration time (e.g., 7 days)
+	            .withClaim("username", user.getUsername())
+	            .sign(Algorithm.HMAC256("edu.pnu.refresh.jwt"));
+		
 		response.addHeader("Authorization", "Bearer "+token);
-			
+		response.addHeader("Refresh-Token", "Bearer "+refreshToken);
 	}
 }

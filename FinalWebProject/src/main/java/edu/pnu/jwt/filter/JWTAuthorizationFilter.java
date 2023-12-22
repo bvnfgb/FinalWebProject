@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 
 import edu.pnu.jwt.domain.Member;
 import edu.pnu.jwt.persistence.MemberRepository;
@@ -33,19 +34,28 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
 			return;
 		}
 		String jwtToken=srcToken.replace("Bearer ", "");
-		String username=JWT.require(Algorithm.HMAC256("edu.pnu.jwt")).build().verify(jwtToken).getClaim("username").asString();
 		
-		Optional<Member> opt=memberRepository.findById(username);
-		if(!opt.isPresent()) {
-			filterChain.doFilter(request, response);
-			return;
-		}
-		Member findmember=opt.get();
+		try {
+			String username=JWT.require(Algorithm.HMAC256("edu.pnu.jwt")).build().verify(jwtToken).getClaim("username").asString();
+			
+			Optional<Member> opt=memberRepository.findByLoginId(username);
+			if(!opt.isPresent()) {
+				filterChain.doFilter(request, response);
+				return;
+			}
+			Member findmember=opt.get();
+			
+			User user=new User(findmember.getLoginId(), findmember.getLoginPassword(), AuthorityUtils.createAuthorityList(findmember.getRank_a().toString()));
+			Authentication auth=new UsernamePasswordAuthenticationToken(user, null,user.getAuthorities());
+			SecurityContextHolder.getContext().setAuthentication(auth);
+		} catch (TokenExpiredException e) {
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Token expired");
+            return;
+			// TODO: handle exception
+		}		
 		
-		User user=new User(findmember.getLoginId(), findmember.getLoginPassword(), AuthorityUtils.createAuthorityList(findmember.getRank_a().toString()));
-				
-		Authentication auth=new UsernamePasswordAuthenticationToken(user, null,user.getAuthorities());
-		SecurityContextHolder.getContext().setAuthentication(auth);
+		
 		
 		
 		filterChain.doFilter(request, response);
