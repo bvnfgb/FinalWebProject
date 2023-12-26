@@ -39,14 +39,17 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
 			String username=JWT.require(Algorithm.HMAC256("edu.pnu.jwt")).build().verify(jwtToken).getClaim("username").asString();
 			
 			Optional<Member> opt=memberRepository.findByLoginId(username);
+			
 			if(!opt.isPresent()) {
 				filterChain.doFilter(request, response);
 				return;
 			}
 			Member findmember=opt.get();
 			
-			User user=new User(findmember.getLoginId(), findmember.getLoginPassword(), AuthorityUtils.createAuthorityList(findmember.getRank_a().toString()));
+			User user=new User(findmember.getLoginId(), findmember.getLoginPassword(), AuthorityUtils.createAuthorityList(findmember.getManageType().toString()));
+			System.out.println(user+"=User");
 			Authentication auth=new UsernamePasswordAuthenticationToken(user, null,user.getAuthorities());
+			
 			SecurityContextHolder.getContext().setAuthentication(auth);
 		} catch (TokenExpiredException e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

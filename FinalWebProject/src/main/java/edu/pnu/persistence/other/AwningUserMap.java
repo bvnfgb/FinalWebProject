@@ -1,6 +1,4 @@
-package edu.pnu.jwt.persistence;
-
-import java.math.BigDecimal;
+package edu.pnu.persistence.other;
 
 public interface AwningUserMap {//user/map의 요청필드만 커스텀하여 전송하는데 필요한 인터페이스
 	

@@ -1,10 +1,14 @@
 package edu.pnu.service;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 
 import edu.pnu.domain.AwningControl;
 
 public interface AwningService {
-	ResponseEntity<?> getAwningList(String token);
-	ResponseEntity<?> addAwning(String token, AwningControl awningControl);
+	@SuppressWarnings("rawtypes")
+	List getAwningList(String token);
+	int addAwning(String token, AwningControl awningControl);
+	AwningStatResult getAwningStat(String token, String deviceId);
 }
