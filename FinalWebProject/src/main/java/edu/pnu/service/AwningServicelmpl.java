@@ -55,7 +55,7 @@ public class AwningServicelmpl implements AwningService {
 		if(list!=null) {
 			for(ManageArea area:list) {
 				if(area.getCity2()==null) {
-					manageArea1234=area.getCityId();
+					manageArea1234=area.getCityId(); 
 					break;
 				}
 				if(area.getCity2().equals(awningControl.getManagementArea2())) {
