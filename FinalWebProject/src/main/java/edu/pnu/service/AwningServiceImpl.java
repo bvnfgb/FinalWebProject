@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import edu.pnu.domain.AwningControl;
@@ -20,7 +19,8 @@ import edu.pnu.persistence.ManageAreaRepository;
 import edu.pnu.persistence.other.AwningIndividualStatus;
 import jakarta.transaction.Transactional;
 @Service
-public class AwningServicelmpl implements AwningService {
+@SuppressWarnings("rawtypes")
+public class AwningServiceImpl implements AwningService {
 	@Autowired
 	MemberRepository memberRepository;
 	@Autowired
@@ -33,11 +33,9 @@ public class AwningServicelmpl implements AwningService {
 	AwningControlStatusRepository awningControlStatusRepository;
 	
 	//이하 구현서비스
-	@SuppressWarnings("rawtypes")
 	@Override
 	public List getAwningList(String token) {// /user/map
-		if(isInvalidString(token))
-			return null;
+		
 		List list= awningControlRepository.findAllByUserMap();//리스트 찾아내기
 		
 		return list;
@@ -45,6 +43,7 @@ public class AwningServicelmpl implements AwningService {
 	
 	@Override
 	public int addAwning(String token, AwningControl awningControl) {
+		// /admin/device/add , 특별한 반환값이 없기에 int로 결과를 알려준다.
 		if(!checkAwningControlValid(awningControl))//true 유효값
 			return 1;
 		if(checkAwningControlBlank(awningControl))//true 비어있음
@@ -72,17 +71,16 @@ public class AwningServicelmpl implements AwningService {
 			return 3;
 		}
 		
-		return 4;
+		return 0;
 	}
 	@Override
 	public AwningStatResult getAwningStat(String token, String deviceId) {
-		
-		
-		if(deviceId==null)
-			return AwningStatResult.DEVICE_ID_NULL_OR_BLANK;
-		if(deviceId.isBlank())
+		// /user/device/view/{}, AwningStatResult는 반환값용 enum이다.
+		if(isInvalidString(deviceId))
 			return AwningStatResult.DEVICE_ID_NULL_OR_BLANK;
 		AwningIndividualStatus awningIndividualStatus =awningControlRepository.findByIndvidualStatus(deviceId);
+		//프로젝션 인터페이스 
+		
 		Optional<AwningControl> awningControlOptional=awningControlRepository.findById(deviceId);
 		
 		AwningControl awningControl=null;
@@ -93,9 +91,41 @@ public class AwningServicelmpl implements AwningService {
 		
 		ManageArea manageArea= manageAreaRepository.findById(awningControl.getManagementArea()).get();
 		awningIndividualStatus.setManagementArea1(manageArea.getCity());
-		if(manageArea.getCity2()!=null)
-			awningIndividualStatus.setManagementArea2(manageArea.getCity2());
+		awningIndividualStatus.
+			setManagementArea2(manageArea.getCity2()!=null?manageArea.getCity2():null);
+		
 		AwningControlStatus awningControlStatus= awningControlStatusRepository.findById(deviceId).get();
+		awnvlStng(awningIndividualStatus,awningControlStatus);
+		
+		
+		return AwningStatResult.SUCCESS.withAwningIndividualStatus(awningIndividualStatus);
+	}
+	
+	@Override
+	public List getAwningLStatList(String token) {
+		List list=awningControlRepository.findAllByUserDevice();
+		return list;
+	}
+	
+	@Override
+	public int deleteAwningSeleted(String token, List<String> list) {
+		try {
+			deleteAwningList(list);
+		} catch (Exception e) {
+			// TODO: handle exception
+			return 1;
+		}
+		return 0;
+	}
+	
+
+	//이하 메소드
+	@Transactional
+	private void deleteAwningList(List<String> list) {
+		awningControlRepository.deleteAllById(list);
+	}
+	
+	private void awnvlStng(AwningIndividualStatus awningIndividualStatus, AwningControlStatus awningControlStatus) {
 		awningIndividualStatus.setAwningCondition(awningControlStatus.getAwningCondition());
 		awningIndividualStatus.setBatteryCondition(awningControlStatus.getBatteryCondition());
 		awningIndividualStatus.setLightingCondition(awningControlStatus.getLightingCondition());
@@ -105,13 +135,8 @@ public class AwningServicelmpl implements AwningService {
 			awningIndividualStatus.setBatteryMessage(awningControlStatus.getBatteryMessage());
 		if(!isInvalidString(awningControlStatus.getAwningMessage()))
 			awningIndividualStatus.setLightingMessage(awningControlStatus.getLightingMessage());
-		
-		
-//		return ResponseEntity.badRequest().body(deviceId);
-		return AwningStatResult.SUCCESS.withAwningIndividualStatus(awningIndividualStatus);
 	}
-	
-	//이하 메소드
+
 	@Transactional
 	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
 		awningControlRepository.save(
@@ -183,8 +208,6 @@ public class AwningServicelmpl implements AwningService {
 		return true;
 	}
 
-
-
 	private boolean isInvalidString(String string) {
 		if(string==null)
 			return true;
@@ -194,5 +217,4 @@ public class AwningServicelmpl implements AwningService {
 		
 	}
 
-	
 }

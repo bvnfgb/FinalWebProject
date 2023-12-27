@@ -26,7 +26,7 @@ public enum AwningStatResult {
 	public AwningStatResult withAwningIndividualStatus(AwningIndividualStatus awningIndividualStatus2) {
 		// TODO Auto-generated method stub
 		this.awningIndividualStatus=awningIndividualStatus2;
-		return ;
+		return SUCCESS;
 	}
 
 	

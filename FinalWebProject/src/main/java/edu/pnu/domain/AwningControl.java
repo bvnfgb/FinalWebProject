@@ -99,4 +99,7 @@ public class AwningControl {
 	
 	@Column(nullable = false,columnDefinition = "int default '0'")
 	private Integer statusBatteryCharge;
+	
+	@Column(nullable = false,columnDefinition = "varchar(10) default 'auto'")
+	private String statusOperationMode;
 }

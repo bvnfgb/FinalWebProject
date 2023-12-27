@@ -11,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +25,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Table(name="user")
 public class Member {
+	//DB에 저장되지않는 임시항목 2개
+	@Transient
+	private String managementArea1;
+	@Transient
+	private String managementArea2;
+	
+	
+	
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer userId;
@@ -42,7 +52,8 @@ public class Member {
     @Column(length = 5, nullable = false)
     private String manager;
 
-    @Column(nullable = false)
+    @Column
+    @Min(-1)
     private Integer contact;
 
     @Enumerated(EnumType.STRING)
@@ -57,6 +68,8 @@ public class Member {
     private Timestamp userCreateDate;
 
     @Column(nullable = false)
-    
     private Integer manageArea;
+    
+    @Column(nullable = false,columnDefinition = "varchar(10)")
+    private String admnsType;
 }

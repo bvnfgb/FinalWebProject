@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import edu.pnu.domain.AwningControl;
 import edu.pnu.persistence.other.AwningIndividualStatus;
+import edu.pnu.persistence.other.AwningUserDeviceView;
 import edu.pnu.persistence.other.AwningUserMap;
 
 public interface AwningControlRepository extends JpaRepository<AwningControl, String> {
@@ -17,5 +18,6 @@ public interface AwningControlRepository extends JpaRepository<AwningControl, St
 	@Query("SELECT a FROM AwningControl a WHERE a.deviceId = :deviceId")
 	AwningIndividualStatus findByIndvidualStatus(@Param("deviceId") String deviceId);
 
-	
+	@Query("SELECT a FROM AwningControl a")
+	List<AwningUserDeviceView> findAllByUserDevice();
 }
