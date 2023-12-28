@@ -18,8 +18,10 @@ public class UserController {
 	@PostMapping("/admin/use/add")
 	public ResponseEntity<?> addUser(@RequestHeader("Authorization") String token,@RequestBody Member member){
 		
-		
-		return null;
+		int addResult=userService.addUser(token, member);
+		if(addResult==1)
+			return ResponseEntity.badRequest().body(null);
+		return ResponseEntity.ok().build();
 		
 	}
 }

@@ -12,5 +12,6 @@ public interface AwningUserMap {//user/map의 요청필드만 커스텀하여 �
 	String getInstallationLocationMemo();
 	Double getLatitude();
 	Double getLongitude();
+	String getAwningId();
     
 }

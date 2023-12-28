@@ -14,11 +14,14 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AwningControlStatus {
 	@Column(length = 20,columnDefinition = "varchar(20) not null default 'normal'")
-	String lightingCondition;
+	@Builder.Default
+	String lightingCondition="normal";
 	@Column(length = 20,columnDefinition = "varchar(20) not null default 'normal'")
-	String awningCondition;
+	@Builder.Default
+	String awningCondition="normal";
 	@Column(length = 20,columnDefinition = "varchar(20) not null default 'normal'")
-	String batteryCondition;
+	@Builder.Default
+	String batteryCondition="normal";
 	
 	@Column(length = 100)
 	String lightingMessage;

@@ -1,4 +1,4 @@
-package edu.pnu.service;
+package edu.pnu.service.other;
 
 import edu.pnu.persistence.other.AwningIndividualStatus;
 

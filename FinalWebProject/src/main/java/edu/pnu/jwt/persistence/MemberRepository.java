@@ -11,6 +11,6 @@ import edu.pnu.jwt.domain.Member;
 public interface MemberRepository extends JpaRepository<Member, String> {
 
 	Optional<Member> findByLoginId(String loginId);
-	
+	void deleteByLoginId(String loginId);
 
 }

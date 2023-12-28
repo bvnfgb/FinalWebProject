@@ -1,6 +1,7 @@
 package edu.pnu.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,6 @@ public interface AwningControlRepository extends JpaRepository<AwningControl, St
 
 	@Query("SELECT a FROM AwningControl a")
 	List<AwningUserDeviceView> findAllByUserDevice();
+	
+	AwningControl findByAwningId(Integer awningId);
 }

@@ -8,13 +8,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pnu.domain.AwningControl;
 import edu.pnu.service.AwningService;
-import edu.pnu.service.AwningStatResult;
+import edu.pnu.service.other.AddModify;
+import edu.pnu.service.other.AwningStatResult;
 @RestController
 @SuppressWarnings("rawtypes")
 public class AwningController {
@@ -33,7 +35,7 @@ public class AwningController {
 	}
 	@PostMapping("/admin/device/add")
 	public ResponseEntity<?> addAwning(@RequestHeader("Authorization") String token,@RequestBody AwningControl awningControl){
-		int addResult=awningService.addAwning(token, awningControl);
+		int addResult=awningService.addAwning(token, awningControl,AddModify.ADD);
 		if(addResult==1)
 			return ResponseEntity.badRequest().body("Incomplete Item");
 		else if(addResult==2)
@@ -71,5 +73,12 @@ public class AwningController {
 			return ResponseEntity.badRequest().body("Failed to delete awning selection!");
 		return ResponseEntity.ok("Awning deletion successful!");
 	}
-	
+	@PutMapping("/admin/device/mod")
+	public ResponseEntity<?> modAwning(@RequestHeader("Authorization") String token,@RequestBody AwningControl awningControl){
+		int modResult=awningService.addAwning(token, awningControl, AddModify.MODIFY);
+		if(modResult==4)
+			return ResponseEntity.badRequest().body("No Awning Id!");
+		return ResponseEntity.ok("Modification successful!");
+		
+	}
 }

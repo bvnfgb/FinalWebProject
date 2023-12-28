@@ -4,19 +4,25 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@ToString
 public class AwningControl {
 	//DB에 저장되지않는 임시항목 2개
 	@Transient
@@ -38,14 +44,15 @@ public class AwningControl {
 	final String batteryMessage=null;
 	//다른 DB에 저장되는 임시항목 2개
 	@Transient
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private Date startDate;
 	@Transient
+	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private Date finshDate;
 	//이하 DB항목
-	@Column(length = 20,nullable = false,unique = true)
+	@Column(length = 20,nullable = false)
 	private String managementNumber;
 	
-	@Id
 	@Column(length = 20,nullable = false)
 	private String deviceId;
 	
@@ -82,24 +89,37 @@ public class AwningControl {
 	@Column
 	private Integer managementArea;
 	
+	
+	@Column
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer awningId;
+	
 	@Column(nullable = false, columnDefinition = "varchar(10) default 'off'")
-	private String statusConnected;
+	@Builder.Default
+	private String statusConnected="off";
 	
 	@Column(nullable = false,columnDefinition = "varchar(10) default 'off'")
-	private String statusLighting;
+	@Builder.Default
+	private String statusLighting="off";
 	
 	@Column(nullable = false,columnDefinition = "varchar(10) default 'off'")
-	private String statusAwningExpand;
+	@Builder.Default
+	private String statusAwningExpand="off";
 	
 	@Column(nullable = false,columnDefinition = "decimal(4,1) default '0.0' ")
-	private BigDecimal statusTemperature;
+	@Builder.Default
+	private BigDecimal statusTemperature=new BigDecimal(0.0);
 	
 	@Column(nullable = false,columnDefinition = "decimal(3,1) default '0.0'") 
-	private BigDecimal statusWindSpeed;
+	@Builder.Default
+	private BigDecimal statusWindSpeed=new BigDecimal(0.0);
 	
 	@Column(nullable = false,columnDefinition = "int default '0'")
-	private Integer statusBatteryCharge;
+	@Builder.Default
+	private Integer statusBatteryCharge=0;
 	
 	@Column(nullable = false,columnDefinition = "varchar(10) default 'auto'")
-	private String statusOperationMode;
+	@Builder.Default
+	private String statusOperationMode="auto";
 }

@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public interface AwningUserDeviceView {
+	void setManagementArea1(String value);
+	void setManagementArea2(String value);
 	// Getter methods for transient fields
     String getManagementArea1();
     String getManagementArea2();
@@ -16,6 +18,7 @@ public interface AwningUserDeviceView {
     
 
     // Getter methods for non-transient fields
+    Integer getManagementArea();
     String getManagementNumber();
     String getDeviceId();
     String getInstallationLocationMemo();
@@ -30,4 +33,5 @@ public interface AwningUserDeviceView {
     BigDecimal getStatusWindSpeed();
     Integer getStatusBatteryCharge();
     String getStatusOperationMode();
+    Integer getAwningId();
 }

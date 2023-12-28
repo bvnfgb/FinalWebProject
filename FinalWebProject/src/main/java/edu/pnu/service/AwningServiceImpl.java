@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import edu.pnu.domain.AwningControl;
 import edu.pnu.domain.AwningControlStatus;
@@ -17,9 +18,12 @@ import edu.pnu.persistence.AwningControlStatusRepository;
 import edu.pnu.persistence.ContractDetaRepository;
 import edu.pnu.persistence.ManageAreaRepository;
 import edu.pnu.persistence.other.AwningIndividualStatus;
-import jakarta.transaction.Transactional;
+import edu.pnu.persistence.other.AwningUserDeviceView;
+import edu.pnu.service.other.AddModify;
+import edu.pnu.service.other.AwningStatResult;
 @Service
 @SuppressWarnings("rawtypes")
+
 public class AwningServiceImpl implements AwningService {
 	@Autowired
 	MemberRepository memberRepository;
@@ -42,8 +46,11 @@ public class AwningServiceImpl implements AwningService {
 	}
 	
 	@Override
-	public int addAwning(String token, AwningControl awningControl) {
+	@Transactional
+	public int addAwning(String token, AwningControl awningControl,AddModify addModify) {
 		// /admin/device/add , 특별한 반환값이 없기에 int로 결과를 알려준다.
+		System.out.println(awningControl.toString()+"=awningControl");
+		
 		if(!checkAwningControlValid(awningControl))//true 유효값
 			return 1;
 		if(checkAwningControlBlank(awningControl))//true 비어있음
@@ -63,13 +70,28 @@ public class AwningServiceImpl implements AwningService {
 				}
 			}
 		}
+		
 		else return 2;
+		
+		if(addModify==AddModify.MODIFY) {
+			
+			if(awningControl.getAwningId()==null)
+				return 4;
+			AwningControl findAwningControl=awningControlRepository.findByAwningId(awningControl.getAwningId());
+			if(findAwningControl==null)
+				return 4;
+			
+			
+			}
+				
 		try {
 			saveMethodForAddAwning(awningControl, manageArea1234);
 		} catch (Exception e) {
 			// TODO: handle exception
 			return 3;
 		}
+		
+			
 		
 		return 0;
 	}
@@ -90,6 +112,7 @@ public class AwningServiceImpl implements AwningService {
 			return AwningStatResult.DEVICE_NOT_FOUND;
 		
 		ManageArea manageArea= manageAreaRepository.findById(awningControl.getManagementArea()).get();
+		
 		awningIndividualStatus.setManagementArea1(manageArea.getCity());
 		awningIndividualStatus.
 			setManagementArea2(manageArea.getCity2()!=null?manageArea.getCity2():null);
@@ -102,12 +125,20 @@ public class AwningServiceImpl implements AwningService {
 	}
 	
 	@Override
-	public List getAwningLStatList(String token) {
-		List list=awningControlRepository.findAllByUserDevice();
+	public List getAwningLStatList(String token) {// /user/device/view
+		List<AwningUserDeviceView> list=awningControlRepository.findAllByUserDevice();
+		for(AwningUserDeviceView awningUserDeviceView:list) {
+			
+			ManageArea manageArea= manageAreaRepository.findById(awningUserDeviceView.getManagementArea()).get();
+			awningUserDeviceView.setManagementArea1(manageArea.getCity());
+			if(manageArea.getCity2()!=null)
+				awningUserDeviceView.setManagementArea2(manageArea.getCity2());
+		}
 		return list;
 	}
 	
 	@Override
+	@Transactional
 	public int deleteAwningSeleted(String token, List<String> list) {
 		try {
 			deleteAwningList(list);
@@ -118,7 +149,8 @@ public class AwningServiceImpl implements AwningService {
 		return 0;
 	}
 	
-
+	
+	
 	//이하 메소드
 	@Transactional
 	private void deleteAwningList(List<String> list) {
@@ -139,25 +171,28 @@ public class AwningServiceImpl implements AwningService {
 
 	@Transactional
 	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
-		awningControlRepository.save(
+		
+			awningControlRepository.save(
 				AwningControl.builder().awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
 				.awningOpenTimeRight(awningControl.getAwningOpenTimeRight())
 				.deviceId(awningControl.getDeviceId())
 				.installationLocationMemo(awningControl.getInstallationLocationMemo())
-				.managementArea(manageArea1234)
+				.managementArea(manageArea1234).latitude(awningControl.getLatitude()).longitude(awningControl.getLongitude())
 				.managementNumber(awningControl.getManagementNumber())
 				.windSpeedThreshold(awningControl.getWindSpeedThreshold())
 				.awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
 				.controlId(awningControl.getControlId()).build()
 				);
-		contractDetaRepository.save(
+			contractDetaRepository.save(
 				ContractDeta.builder().contractStartDate(awningControl.getStartDate())
 				.contractTerminationDate(awningControl.getFinshDate())
 				.registrationDate(new Date())
 				.awningDeviceId(awningControl.getDeviceId())
 				.build()
 				);
-		awningControlStatusRepository.save(AwningControlStatus.builder().awningDeviceId(awningControl.getDeviceId()).build());
+			awningControlStatusRepository.save(AwningControlStatus.builder().awningDeviceId(awningControl.getDeviceId()).build());
+		
+		
 	}
 	
 	private boolean checkAwningControlBlank(AwningControl awningControl) {
@@ -169,8 +204,6 @@ public class AwningServiceImpl implements AwningService {
 		if(awningControl.getDeviceId().isBlank())
 			return true;
 		if(awningControl.getInstallationLocationMemo().isBlank())
-			return true;
-		if(awningControl.getManagementNumber().isBlank())
 			return true;
 		if(awningControl.getWindSpeedThreshold().isBlank())
 			return true;
@@ -198,8 +231,6 @@ public class AwningServiceImpl implements AwningService {
 			return false;
 		if(awningControl.getLongitude()==null)
 			return false;
-		if(awningControl.getManagementNumber()==null)
-			return false;
 		if(awningControl.getWindSpeedThreshold()==null)
 			return false;
 		if(awningControl.getManagementArea1()==null)
@@ -216,5 +247,7 @@ public class AwningServiceImpl implements AwningService {
 		return false;
 		
 	}
+
+	
 
 }
