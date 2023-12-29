@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -47,9 +48,14 @@ public class AwningController {
 			
 		
 	}
+	
 	@GetMapping("/user/device/view")
-	public ResponseEntity<?> getAwningLStatList(@RequestHeader("Authorization") String token){
-		List list=awningService.getAwningLStatList(token);
+	public ResponseEntity<?> getAwningLStatList(@RequestHeader("Authorization") String token,
+			@ModelAttribute("SearchCriteria") String searchTerm,
+			@ModelAttribute("SearchTerm")String searchCriteria){
+		
+		
+		List list=awningService.getAwningLStatList(token,searchTerm,searchCriteria);
 		if(list!=null)
 			return ResponseEntity.ok(list);
 		return ResponseEntity.noContent().build();

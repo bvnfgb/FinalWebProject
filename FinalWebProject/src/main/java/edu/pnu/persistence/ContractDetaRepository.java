@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import edu.pnu.domain.ContractDeta;
 
-public interface ContractDetaRepository extends JpaRepository<ContractDeta, Integer> {
 
+public interface ContractDetaRepository extends JpaRepository<ContractDeta, Integer> {
+	ContractDeta findByAwningDeviceId(String awningDeviceId);
 }

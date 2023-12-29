@@ -48,4 +48,5 @@ public interface AwningIndividualStatus {// /device/view/{}용 커스텀 프로�
     BigDecimal getStatusWindSpeed();
     Integer getStatusBatteryCharge();
     Integer getAwningId();
+    String getStatusOperationMode();
 }

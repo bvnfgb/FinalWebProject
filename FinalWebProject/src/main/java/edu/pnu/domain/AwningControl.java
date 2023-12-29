@@ -53,10 +53,10 @@ public class AwningControl {
 	@Column(length = 20,nullable = false)
 	private String managementNumber;
 	
-	@Column(length = 20,nullable = false)
+	@Column(length = 20,nullable = false,unique = true)
 	private String deviceId;
 	
-	@Column(nullable = false)
+	@Column(nullable = false,unique = true)
 	private Integer controlId;
 	
 	@Column(length = 50,nullable = false,unique = true)

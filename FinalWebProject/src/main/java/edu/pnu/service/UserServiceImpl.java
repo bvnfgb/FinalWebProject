@@ -11,6 +11,7 @@ import edu.pnu.jwt.domain.ManageType;
 import edu.pnu.jwt.domain.Member;
 import edu.pnu.jwt.persistence.MemberRepository;
 import edu.pnu.persistence.ManageAreaRepository;
+import edu.pnu.service.other.AddModify;
 @Service
 public class UserServiceImpl implements UserService {
 	@Autowired
@@ -20,19 +21,19 @@ public class UserServiceImpl implements UserService {
 	
 	//이하 구현서비스
 	@Override
-	public int addUser(String token,Member member) {
+	public int addUser(String token,Member member,AddModify addModify) {
 		if(!checkMemberValid(member))
 			return 1;
 		List<ManageArea> areaList= manageAreaRepository.findByCity(member.getManagementArea1());
 		Integer ManageArea1234=setManagementAreaId(member,areaList);
 		if (ManageArea1234==null)
 			return 1;
-		member=Member.builder().admnsType(member.getAdmnsType()).contact(member.getContact()).depart(member.getDepart())
-		.loginId(member.getLoginId()).loginPassword(member.getLoginPassword()).manageArea(ManageArea1234)
-		.manager(member.getManager()).rank_a(member.getRank_a()).manageType(ManageType.ROLE_TEST).build();
+		member=memberSettings(member, ManageArea1234, addModify);
+		
 		memberRepository.save(member);
 		return 0;
 	}
+	
 	@Override
 	public int delUser(String token, String loginId) {
 		Optional<Member> optional =memberRepository.findByLoginId(loginId);
@@ -43,13 +44,28 @@ public class UserServiceImpl implements UserService {
 		return 0;
 	}
 	@Override
-	public int getUser(String token, String loginId) {
-		Member member=memberRepository.findByLoginId(loginId).get();
+	public List<Member> getUserList(String token) {
+		
+		List<Member> memberList= memberRepository.findAll();
+		if(memberList.isEmpty())
+			return null;
 		
 		// TODO Auto-generated method stub
-		return 0;
+		return memberList;
 	}
 	//이하 메소드
+	private Member memberSettings(Member member, Integer ManageArea1234, AddModify addModify) {
+		member=Member.builder().admnsType(member.getAdmnsType()).contact(member.getContact()).depart(member.getDepart())
+				.loginId(member.getLoginId()).loginPassword(member.getLoginPassword()).manageArea(ManageArea1234)
+				.manager(member.getManager()).rank_a(member.getRank_a()).manageType(ManageType.ROLE_TEST).build();
+		if(addModify==AddModify.MODIFY) {
+			member=Member.builder().userId(member.getUserId())
+					.admnsType(member.getAdmnsType()).contact(member.getContact()).depart(member.getDepart())
+					.loginId(member.getLoginId()).loginPassword(member.getLoginPassword()).manageArea(ManageArea1234)
+					.manager(member.getManager()).rank_a(member.getRank_a()).manageType(ManageType.ROLE_TEST).build();
+		}
+		return member;
+	}
 	private Integer setManagementAreaId(Member member,List<ManageArea> areaList) {
 		try {
 			for(ManageArea area:areaList) {
