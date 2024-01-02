@@ -2,15 +2,17 @@ package edu.pnu.domain;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,16 +46,20 @@ public class AwningControl {
 	final String batteryMessage=null;
 	//다른 DB에 저장되는 임시항목 2개
 	@Transient
-	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private Date startDate;
 	@Transient
-	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
 	private Date finshDate;
+	//DB 연관관계 설정을 위한 엔티티
+	
+	@OneToMany(mappedBy = "awningControl", cascade = CascadeType.ALL)
+	private final List<ContractDeta> contractDetas = new ArrayList<>();
 	//이하 DB항목
 	@Column(length = 20,nullable = false)
 	private String managementNumber;
 	
-	@Column(length = 20,nullable = false,unique = true)
+	@Column(unique = true
+			,columnDefinition = "varchar(20) not null")
+	
 	private String deviceId;
 	
 	@Column(nullable = false,unique = true)

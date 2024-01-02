@@ -18,7 +18,7 @@ public class AwningControlStatus {
 	String lightingCondition="normal";
 	@Column(length = 20,columnDefinition = "varchar(20) not null default 'normal'")
 	@Builder.Default
-	String awningCondition="normal";
+	String motorCondition="normal";
 	@Column(length = 20,columnDefinition = "varchar(20) not null default 'normal'")
 	@Builder.Default
 	String batteryCondition="normal";
@@ -26,7 +26,7 @@ public class AwningControlStatus {
 	@Column(length = 100)
 	String lightingMessage;
 	@Column(length = 100)
-	String awningMessage;
+	String motorMessage;
 	@Column(length = 100)
 	String batteryMessage;
 	

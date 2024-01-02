@@ -48,6 +48,12 @@ public class UserController {
 			return ResponseEntity.noContent().build();
 		return ResponseEntity.ok(list);
 	}
-//	@PutMapping("/admin/use/mod")
-//	public ResponseEntity<?> modUserList
+	@PutMapping("/admin/use/mod")
+	public ResponseEntity<?> modUserList(@RequestHeader("Authorization")String token,@RequestBody Member member){
+		int modResult=userService.addUser(token, member,AddModify.MODIFY);
+		if(modResult==1)
+			return ResponseEntity.badRequest().body(null);
+		return ResponseEntity.ok().build();
+		
+	}
 }

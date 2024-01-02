@@ -25,5 +25,6 @@ public interface AwningControlRepository extends JpaRepository<AwningControl, St
 	AwningControl findByAwningId(Integer awningId);
 	
 	Optional<AwningControl> findByDeviceId(String deviceId);
-	void deleteAllByDeviceIdIn(List<String> deviceIds);
+	int deleteAllByDeviceIdIn(List<String> deviceIds);
+	
 }

@@ -1,15 +1,18 @@
 package edu.pnu.service;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+
 
 import edu.pnu.domain.AwningControl;
 import edu.pnu.domain.AwningControlStatus;
@@ -135,9 +138,20 @@ public class AwningServiceImpl implements AwningService {
 	}
 	
 	@Override
-	public List getAwningLStatList(String token,String searchTerm,String searchCriteria)  {// /user/device/view
+	public List getAwningLStatList(String token,HashMap<String,String> paramMap)  {// /user/device/view
 		List<AwningUserDeviceView> list=awningControlRepository.findAllByUserDevice();
-		
+		String searchTerm=paramMap.get("searchTerm");
+		String searchCriteria=paramMap.get("searchCriteria");
+		String filtering=paramMap.get("filtering");
+		String statusConnected=paramMap.get("statusConnected");
+		String statusLighting=paramMap.get("statusLighting");
+		final List<String>  keywordList=Arrays.asList("searchTerm","searchCriteria","filtering","statusConnected",
+				"statusLighting","statusAwningExpand","managementArea1","managementArea2","lightingCondition",
+				"motorCondition","batteryCondition");
+		List<String> getKeywordList=new ArrayList<>();
+		for(String keyword:keywordList) {
+			getKeywordList.add(paramMap.get(keyword));
+		}
 		for(AwningUserDeviceView awningUserDeviceView:list) {
 			
 			ManageArea manageArea= manageAreaRepository.findById(awningUserDeviceView.getManagementArea()).get();
@@ -147,80 +161,109 @@ public class AwningServiceImpl implements AwningService {
 		}
 		
 		System.out.println(searchTerm+"=searchTerm "+searchCriteria+"=searchCriteria");
-		if(!isInvalidString(searchTerm)) {
-			
-			for(int i=0;i<list.size();i++) {
-				if(searchCriteria.equals("full")) {
-					if(!list.get(i).getInstallationLocationMemo().contains(searchTerm)&&
-							!list.get(i).getManagementNumber().contains(searchTerm))
-						list.remove(i);
-						
-				}
-				else if(searchCriteria.equals("installationLocationMemo")) {
-					if(!list.get(i).getInstallationLocationMemo().contains(searchTerm))
-						list.remove(i);
-				}
-				else {
-					if(!list.get(i).getManagementNumber().contains(searchTerm))
-						list.remove(i);
-				}
-			}
+		
+		if(!isInvalidString(getKeywordList.get(0))) {
+			applySearch(list, searchCriteria, searchTerm);
 		}
+		
+		
+		if(!isInvalidString(filtering)) {
+			List<Boolean> filterList = new ArrayList<>();
+			
+			filterList.add(isInvalidString(statusConnected));
+			filterList.add(isInvalidString(statusLighting));
+		}
+		
 		return list;
 	}
 	
+	
+
 	@Override
 	@Transactional
 	public int deleteAwningSeleted(String token, List<String> list) {
 		System.out.println(list+"=list");
-			deleteAwningList(list);
+		try {
+			
+			int value= deleteAwningList(list);
+			System.out.println("deleteAwningSeleted:"+value);
+			return value;
+		} catch (Exception e) {
+			// TODO: handle exception
+			return 0;
+		}
 		
-		return 0;
+		
 	}
 	
 	
 	
 	//이하 메소드
+	private void applySearch(List<AwningUserDeviceView> list,String searchCriteria,String searchTerm) {
+		for(int i=0;i<list.size();i++) {
+			if(searchCriteria.equals("full")) {
+				if(!list.get(i).getInstallationLocationMemo().contains(searchTerm)&&
+						!list.get(i).getManagementNumber().contains(searchTerm)) 
+				{
+					
+					list.remove(i--);//삭제시 인덱스 이동하기 때문에 정상화조치 
+				}
+			}
+			else if(searchCriteria.equals("installationLocationMemo")) {
+				if(!list.get(i).getInstallationLocationMemo().contains(searchTerm))
+					list.remove(i--);
+			}
+			else {
+				if(!list.get(i).getManagementNumber().contains(searchTerm))
+					list.remove(i--);
+			}
+		}
+		
+	}
 	@Transactional
-	private void deleteAwningList(List<String> list) {
-		awningControlRepository.deleteAllByDeviceIdIn(list);
+	private int deleteAwningList(List<String> list) {
+		return awningControlRepository.deleteAllByDeviceIdIn(list);
 	}
 	
 	private void awnvlStng(AwningIndividualStatus awningIndividualStatus, AwningControlStatus awningControlStatus) {
-		awningIndividualStatus.setAwningCondition(awningControlStatus.getAwningCondition());
+		awningIndividualStatus.setAwningCondition(awningControlStatus.getMotorCondition());
 		awningIndividualStatus.setBatteryCondition(awningControlStatus.getBatteryCondition());
 		awningIndividualStatus.setLightingCondition(awningControlStatus.getLightingCondition());
-		if(!isInvalidString(awningControlStatus.getAwningMessage()))
-			awningIndividualStatus.setAwningMessage(awningControlStatus.getAwningMessage());
+		if(!isInvalidString(awningControlStatus.getMotorMessage()))
+			awningIndividualStatus.setAwningMessage(awningControlStatus.getMotorMessage());
 		if(!isInvalidString(awningControlStatus.getBatteryMessage()))
 			awningIndividualStatus.setBatteryMessage(awningControlStatus.getBatteryMessage());
-		if(!isInvalidString(awningControlStatus.getAwningMessage()))
+		if(!isInvalidString(awningControlStatus.getLightingMessage()))
 			awningIndividualStatus.setLightingMessage(awningControlStatus.getLightingMessage());
 	}
 
 	@Transactional
 	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
-//			System.out.println("problem1");
+			System.out.println("problem1");
+			awningControl= AwningControl.builder().awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
+			.awningOpenTimeRight(awningControl.getAwningOpenTimeRight())
+			.deviceId(awningControl.getDeviceId())
+			.installationLocationMemo(awningControl.getInstallationLocationMemo())
+			.managementArea(manageArea1234).latitude(awningControl.getLatitude()).longitude(awningControl.getLongitude())
+			.managementNumber(awningControl.getManagementNumber())
+			.windSpeedThreshold(awningControl.getWindSpeedThreshold())
+			.awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
+			.controlId(awningControl.getControlId())
+			.startDate(awningControl.getStartDate()).finshDate(awningControl.getFinshDate()).build();
 			awningControlRepository.save(
-				AwningControl.builder().awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
-				.awningOpenTimeRight(awningControl.getAwningOpenTimeRight())
-				.deviceId(awningControl.getDeviceId())
-				.installationLocationMemo(awningControl.getInstallationLocationMemo())
-				.managementArea(manageArea1234).latitude(awningControl.getLatitude()).longitude(awningControl.getLongitude())
-				.managementNumber(awningControl.getManagementNumber())
-				.windSpeedThreshold(awningControl.getWindSpeedThreshold())
-				.awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
-				.controlId(awningControl.getControlId()).build()
+				awningControl
 				);
-//			System.out.println("problem2");
+			System.out.println("problem2");
+			
 			contractDetaRepository.save(
-				ContractDeta.builder().contractStartDate(awningControl.getStartDate())
+				ContractDeta.builder().awningControl(awningControl)
+				.contractStartDate(awningControl.getStartDate())
 				.contractTerminationDate(awningControl.getFinshDate())
 				.registrationDate(new Date())
-				.awningDeviceId(awningControl.getDeviceId())
+				
 				.build()
 				);
-//			System.out.println("problem3");
+			System.out.println("problem3");
 			awningControlStatusRepository.save(AwningControlStatus.builder().awningDeviceId(awningControl.getDeviceId()).build());
 		
 		
