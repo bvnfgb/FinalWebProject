@@ -6,13 +6,16 @@ import java.sql.Timestamp;
 public interface AwningUserDeviceView {
 	void setManagementArea1(String value);
 	void setManagementArea2(String value);
+	void setLightingCondition(String value);
+	void setMotorCondition(String value);
+	void setBatteryCondition(String value);
 	// Getter methods for transient fields
     String getManagementArea1();
     String getManagementArea2();
 
     // Getter methods for non-input transient fields
     String getLightingCondition();
-    String getAwningCondition();
+    String getMotorCondition();
     String getBatteryCondition();
 
     

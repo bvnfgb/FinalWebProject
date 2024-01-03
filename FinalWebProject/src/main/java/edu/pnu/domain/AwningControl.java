@@ -35,7 +35,7 @@ public class AwningControl {
 	@Transient
 	final String lightingCondition="normal";
 	@Transient
-	final String awningCondition="normal";
+	final String motorCondition="normal";
 	@Transient
 	final String batteryCondition="normal";
 	@Transient

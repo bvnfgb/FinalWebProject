@@ -2,6 +2,7 @@ package edu.pnu.socket;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+
+import jakarta.websocket.EncodeException;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -18,7 +23,7 @@ import jakarta.websocket.Session;
 import jakarta.websocket.server.ServerEndpoint;
 
 @Service
-@ServerEndpoint("/socket/chatt")
+@ServerEndpoint("/user/socket/chatt")
 public class WebSocketService {
     private static Set<Session> clients = Collections.synchronizedSet(new HashSet<Session>());
     private static Logger logger = LoggerFactory.getLogger(WebSocketService.class);
@@ -36,11 +41,11 @@ public class WebSocketService {
             logger.info("이미 연결된 session");
         }
     }
-
+   
     @OnMessage
     public void onMessage(String message, Session session) throws IOException {
         logger.info("receive message : {}", message);
-
+        
         for (Session s : clients) {
             logger.info("send data : {}", message);
             s.getBasicRemote().sendText(message);
@@ -51,5 +56,22 @@ public class WebSocketService {
     public void onClose(Session session) {
         logger.info("session close : {}", session);
         clients.remove(session);
+    }
+    public int sendTest(HashMap<String, String> jsonObject) {
+    	
+    	ObjectMapper objectMapper = new ObjectMapper();
+    	
+    	
+    		
+    	for(Session s:clients) {
+    		try {
+    			String jsonString=objectMapper.writeValueAsString(jsonObject);
+				s.getBasicRemote().sendText(jsonString);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return 1;
+			}
+    	}
+    	return 0;
     }
 }

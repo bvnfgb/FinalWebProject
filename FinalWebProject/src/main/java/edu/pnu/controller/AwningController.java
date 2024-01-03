@@ -1,6 +1,5 @@
 package edu.pnu.controller;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,16 +15,20 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.util.JSONPObject;
+
 import edu.pnu.domain.AwningControl;
 import edu.pnu.service.AwningService;
 import edu.pnu.service.other.AddModify;
 import edu.pnu.service.other.AwningStatResult;
+import edu.pnu.socket.WebSocketService;
 @RestController
 @SuppressWarnings("rawtypes")
 public class AwningController {
 	@Autowired
 	private AwningService awningService;
-	
+	@Autowired
+	private WebSocketService webSocketService;
 	@PostMapping("/user/map")
 	public ResponseEntity<?> getAwningList(@RequestHeader("Authorization") String token) {
 		
@@ -75,10 +78,9 @@ public class AwningController {
 	@DeleteMapping("/admin/device/del")
 	public ResponseEntity<?> deleteAwningSeleted(@RequestHeader("Authorization") String token,@RequestBody List<String> list){
 		
-
-		
 		int deleteCount=awningService.deleteAwningSeleted(token, list);
-		
+		if(deleteCount==0)
+			return ResponseEntity.noContent().build();
 		return ResponseEntity.ok("Awning deletion successful!["+deleteCount+"]");
 	}
 	@PutMapping("/admin/device/mod")
@@ -87,6 +89,14 @@ public class AwningController {
 		if(modResult==4)
 			return ResponseEntity.badRequest().body("No Awning Id!");
 		return ResponseEntity.ok("Modification successful!");
+		
+	}
+	@PostMapping("/user/test/send")
+	public ResponseEntity<?> sendText(@RequestHeader("Authorization") String token,@RequestBody HashMap<String,String> jsonObject ){
+		int sendResult=webSocketService.sendTest(jsonObject);
+		if(sendResult!=0)
+			return ResponseEntity.internalServerError().body("Sending ER");
+		return ResponseEntity.ok("Sending success");
 		
 	}
 }

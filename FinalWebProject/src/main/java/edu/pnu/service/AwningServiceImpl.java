@@ -142,41 +142,59 @@ public class AwningServiceImpl implements AwningService {
 		List<AwningUserDeviceView> list=awningControlRepository.findAllByUserDevice();
 		String searchTerm=paramMap.get("searchTerm");
 		String searchCriteria=paramMap.get("searchCriteria");
-		String filtering=paramMap.get("filtering");
 		String statusConnected=paramMap.get("statusConnected");
 		String statusLighting=paramMap.get("statusLighting");
-		final List<String>  keywordList=Arrays.asList("searchTerm","searchCriteria","filtering","statusConnected",
+		String statusAwningExpand=paramMap.get("statusAwningExpand");
+		String managementArea1=paramMap.get("managementArea1");
+		String managementArea2=paramMap.get("managementArea2");
+		String lightingCondition=paramMap.get("lightingCondition");
+		String motorCondition=paramMap.get("motorCondition");
+		String batteryCondition=paramMap.get("batteryCondition");
+		final List<String>  keywordList=Arrays.asList("searchTerm","searchCriteria","statusConnected",
 				"statusLighting","statusAwningExpand","managementArea1","managementArea2","lightingCondition",
 				"motorCondition","batteryCondition");
 		List<String> getKeywordList=new ArrayList<>();
 		for(String keyword:keywordList) {
 			getKeywordList.add(paramMap.get(keyword));
 		}
+		List<String> filterList=keywordList.stream().skip(2).toList();
+		List<String> getFilterList=getKeywordList.stream().skip(2).toList();
 		for(AwningUserDeviceView awningUserDeviceView:list) {
 			
 			ManageArea manageArea= manageAreaRepository.findById(awningUserDeviceView.getManagementArea()).get();
 			awningUserDeviceView.setManagementArea1(manageArea.getCity());
 			if(manageArea.getCity2()!=null)
 				awningUserDeviceView.setManagementArea2(manageArea.getCity2());
+			AwningControlStatus awningControlStatus=awningControlStatusRepository.findById(awningUserDeviceView.getDeviceId()).get();
+			awningUserDeviceView.setMotorCondition(awningControlStatus.getMotorCondition());
+			awningUserDeviceView.setLightingCondition(awningControlStatus.getLightingCondition());
+			awningUserDeviceView.setBatteryCondition(awningControlStatus.getBatteryCondition());
 		}
 		
 		System.out.println(searchTerm+"=searchTerm "+searchCriteria+"=searchCriteria");
-		
-		if(!isInvalidString(getKeywordList.get(0))) {
-			applySearch(list, searchCriteria, searchTerm);
+		System.out.println(statusConnected+"=statusConnected "+statusLighting+"=statusLighting "+
+				statusAwningExpand+"=statusAwningExpand "+managementArea1+"=managementArea1 "+
+				managementArea2+"=managementArea2 "+lightingCondition+"=lightingCondition "+
+				motorCondition+"=motorCondition "+batteryCondition+"=batteryCondition ");
+		if(!isInvalidString(searchTerm)) {
+			applySearch(list, searchTerm, searchCriteria);
 		}
-		
-		
-		if(!isInvalidString(filtering)) {
-			List<Boolean> filterList = new ArrayList<>();
+		if(useFilter(getFilterList)) {
+			filterResult(list,filterList,getFilterList);
 			
-			filterList.add(isInvalidString(statusConnected));
-			filterList.add(isInvalidString(statusLighting));
 		}
-		
+			
 		return list;
 	}
 	
+	
+
+	
+
+	
+
+	
+
 	
 
 	@Override
@@ -199,7 +217,37 @@ public class AwningServiceImpl implements AwningService {
 	
 	
 	//이하 메소드
-	private void applySearch(List<AwningUserDeviceView> list,String searchCriteria,String searchTerm) {
+	private void filterResult(List<AwningUserDeviceView> list,List<String> filterList,List<String> getFilterList) {
+		for(int i=0;i<list.size();i++) {
+			List<String> orgnlFllst=setFilterList(list.get(i));
+			for(int j=0;j<orgnlFllst.size();j++) {
+				if(!isInvalidString(getFilterList.get(j))) {
+					if(!orgnlFllst.get(j).equals(getFilterList.get(j))&&!getFilterList.equals("full")) {
+						list.remove(i--);
+						break;
+					}
+				}
+			}
+		}
+		
+		
+	}
+
+	private List<String> setFilterList(AwningUserDeviceView view) {
+		List<String> returnList=new ArrayList<>();
+		returnList.add(view.getStatusConnected());returnList.add(view.getStatusLighting());
+		returnList.add(view.getStatusAwningExpand());returnList.add(view.getManagementArea1());
+		returnList.add(view.getManagementArea2());returnList.add(view.getLightingCondition());
+		returnList.add(view.getMotorCondition());returnList.add(view.getBatteryCondition());
+		return returnList;
+	}
+	private boolean useFilter(List<String> getFilterList) {
+		for(String s:getFilterList)
+			if(!isInvalidString(s))
+				return true;
+		return false;
+	}
+	private void applySearch(List<AwningUserDeviceView> list,String searchTerm,String searchCriteria) {
 		for(int i=0;i<list.size();i++) {
 			if(searchCriteria.equals("full")) {
 				if(!list.get(i).getInstallationLocationMemo().contains(searchTerm)&&
