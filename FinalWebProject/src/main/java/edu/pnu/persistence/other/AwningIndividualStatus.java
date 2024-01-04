@@ -11,7 +11,7 @@ public interface AwningIndividualStatus {// /device/view/{}용 커스텀 프로�
 	void setStartDate(Date value);
 	void setFinshDate(Date value);
     void setLightingCondition(String value);
-    void setAwningCondition(String value);
+    void setMotorCondition(String value);
     void setBatteryCondition(String value);
     void setLightingMessage(String value);
     void setAwningMessage(String value);
@@ -20,7 +20,7 @@ public interface AwningIndividualStatus {// /device/view/{}용 커스텀 프로�
     
 	//getter
     String getLightingCondition();
-    String getAwningCondition();
+    String getMotorCondition();
     String getBatteryCondition();
     String getLightingMessage();
     String getAwningMessage();

@@ -23,21 +23,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ContractDeta {
 	// 연관관계를 위한 엔티티
-	@ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.PERSIST)
+	@ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
 	@JoinColumn(name = "awningDeviceId", referencedColumnName = "deviceId")
 	private AwningControl awningControl;
 	//일반 DB항목
-	@Column(columnDefinition = "date default (current_date)")
+	@Column(columnDefinition = "date ")
 	private Date contractStartDate;
 
 	@Column(columnDefinition = "date ")
 	private Date contractTerminationDate;
 
-	@Column(columnDefinition = "date ")
+	@Column(columnDefinition = "date default (current_date)")
 	private Date registrationDate;
 
 	@Id
-	@Column(nullable = false)
+	@Column
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer contractId;
 

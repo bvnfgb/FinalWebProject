@@ -5,6 +5,8 @@ import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class ReservationDeta {
-	@Column(nullable = false, length = 5)
+	@Column(nullable = false, length = 10)
 	private String reservationItems;
 	
 	@Column(nullable = false, length = 10)
@@ -34,6 +36,11 @@ public class ReservationDeta {
 	private String awningDeviceId;
 	
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer rsrvtId;
+	
+	
 	@Column(nullable = false,columnDefinition = "timestamp default current_timestamp")
-	private Timestamp registrationDate;
+	@Builder.Default
+	private Timestamp registrationDate=new Timestamp(System.currentTimeMillis());
 }

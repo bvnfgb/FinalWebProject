@@ -4,15 +4,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import edu.pnu.service.AwningService;
 
 @SpringBootTest
 public class FinalWebProjectApplicationTests {
-	@Autowired
-	private AwningService as;
 	private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
 	private static final String URL = "jdbc:mysql://127.0.0.1:3306/project"; // jdbc:mysql://127.0.0.1:3306/여러분이 만드신 스키마이름 
 	private static final String USER = "root"; //DB 사용자명  

@@ -65,6 +65,8 @@ public class AwningServiceImpl implements AwningService {
 		
 		List<ManageArea> list= manageAreaRepository.findByCity(awningControl.getManagementArea1());
 		Integer manageArea1234 = null;
+		AwningControl findAwningControl=null;
+		Integer contractId=null;
 		if(list!=null) {
 			for(ManageArea area:list) {
 				if(area.getCity2()==null) {
@@ -84,15 +86,22 @@ public class AwningServiceImpl implements AwningService {
 			
 			if(awningControl.getAwningId()==null)
 				return 4;
-			AwningControl findAwningControl=awningControlRepository.findByAwningId(awningControl.getAwningId());
+			findAwningControl=awningControlRepository.findByAwningId(awningControl.getAwningId());
+			
 			if(findAwningControl==null)
 				return 4;
+			try {
+				contractId=contractDetaRepository.findByAwningDeviceId(findAwningControl.getDeviceId()).getContractId() ;
+			} catch (Exception e) {
+				// TODO: handle exception
+				return 4;
+			}
 			
 			
 			}
-				
+			
 		try {
-			saveMethodForAddAwning(awningControl, manageArea1234);
+			saveMethodForAddAwning(awningControl, manageArea1234,contractId);
 		} catch (Exception e) {
 			// TODO: handle exception
 			return 3;
@@ -222,7 +231,7 @@ public class AwningServiceImpl implements AwningService {
 			List<String> orgnlFllst=setFilterList(list.get(i));
 			for(int j=0;j<orgnlFllst.size();j++) {
 				if(!isInvalidString(getFilterList.get(j))) {
-					if(!orgnlFllst.get(j).equals(getFilterList.get(j))&&!getFilterList.equals("full")) {
+					if(!orgnlFllst.get(j).equals(getFilterList.get(j))&&!getFilterList.get(j).equals("full")) {
 						list.remove(i--);
 						break;
 					}
@@ -274,7 +283,7 @@ public class AwningServiceImpl implements AwningService {
 	}
 	
 	private void awnvlStng(AwningIndividualStatus awningIndividualStatus, AwningControlStatus awningControlStatus) {
-		awningIndividualStatus.setAwningCondition(awningControlStatus.getMotorCondition());
+		awningIndividualStatus.setMotorCondition(awningControlStatus.getMotorCondition());
 		awningIndividualStatus.setBatteryCondition(awningControlStatus.getBatteryCondition());
 		awningIndividualStatus.setLightingCondition(awningControlStatus.getLightingCondition());
 		if(!isInvalidString(awningControlStatus.getMotorMessage()))
@@ -286,7 +295,7 @@ public class AwningServiceImpl implements AwningService {
 	}
 
 	@Transactional
-	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
+	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234,Integer contractId) {
 			System.out.println("problem1");
 			awningControl= AwningControl.builder().awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
 			.awningOpenTimeRight(awningControl.getAwningOpenTimeRight())
@@ -296,20 +305,45 @@ public class AwningServiceImpl implements AwningService {
 			.managementNumber(awningControl.getManagementNumber())
 			.windSpeedThreshold(awningControl.getWindSpeedThreshold())
 			.awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
-			.controlId(awningControl.getControlId())
+			.controlId(awningControl.getControlId()).awningId(awningControl.getAwningId()!=null?awningControl.getAwningId():null)
 			.startDate(awningControl.getStartDate()).finshDate(awningControl.getFinshDate()).build();
 			awningControlRepository.save(
 				awningControl
 				);
 			System.out.println("problem2");
+			System.out.println("---contractId: "+contractId);
+			Date startDate=awningControl.getStartDate();
+			Date finshDate=awningControl.getFinshDate();
+			startDate.setHours(0);
+			finshDate.setHours(0);
+			if(contractId!=null) {
+				ContractDeta contractDeta=contractDetaRepository.findById(contractId).get();
+				if(contractDeta.getContractStartDate().compareTo(awningControl.getStartDate())==0) {
+					if(contractDeta.getContractTerminationDate().compareTo(awningControl.getFinshDate())==0);
+					else
+						contractId=null;
+				}
+				else
+					contractId=null;	
+			}
+			System.out.println("contractId: "+contractId+"---");
+			ContractDeta contractDeta=ContractDeta.builder().awningControl(awningControl)
+					.contractStartDate(awningControl.getStartDate())
+					.contractTerminationDate(awningControl.getFinshDate())
+					.registrationDate(new Date())
+					.build();
+			
+			if(contractId!=null) {
+				contractDeta=ContractDeta.builder().awningControl(awningControl)
+					.contractStartDate(awningControl.getStartDate())
+					.contractTerminationDate(awningControl.getFinshDate())
+					.registrationDate(new Date())
+					.contractId(contractId)
+					.build();
+			}
 			
 			contractDetaRepository.save(
-				ContractDeta.builder().awningControl(awningControl)
-				.contractStartDate(awningControl.getStartDate())
-				.contractTerminationDate(awningControl.getFinshDate())
-				.registrationDate(new Date())
-				
-				.build()
+				contractDeta
 				);
 			System.out.println("problem3");
 			awningControlStatusRepository.save(AwningControlStatus.builder().awningDeviceId(awningControl.getDeviceId()).build());
