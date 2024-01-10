@@ -1,16 +1,12 @@
 package edu.pnu.domain;
 
-import java.util.Date;
+import java.sql.Date;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,9 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ContractDeta {
 	// 연관관계를 위한 엔티티
-	@ManyToOne(fetch = FetchType.EAGER,cascade = CascadeType.MERGE)
-	@JoinColumn(name = "awningDeviceId", referencedColumnName = "deviceId")
-	private AwningControl awningControl;
+	
 	//일반 DB항목
 	@Column(columnDefinition = "date ")
 	private Date contractStartDate;
@@ -37,11 +31,10 @@ public class ContractDeta {
 	private Date registrationDate;
 
 	@Id
-	@Column
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer contractId;
+	
+	private Integer awningId;
 
-	@Column(columnDefinition = "varchar(20) not null",insertable = false, updatable = false)
+	@Column(columnDefinition = "varchar(20) not null")
 	private String awningDeviceId;
 
 }

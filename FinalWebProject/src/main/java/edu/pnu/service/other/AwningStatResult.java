@@ -1,5 +1,6 @@
 package edu.pnu.service.other;
 
+import edu.pnu.domain.other.AwningDeviceView;
 import edu.pnu.persistence.other.AwningIndividualStatus;
 
 public enum AwningStatResult {
@@ -8,9 +9,9 @@ public enum AwningStatResult {
     DEVICE_NOT_FOUND(2, null);
 
     private final int code;
-    private AwningIndividualStatus awningIndividualStatus;
+    private AwningDeviceView awningIndividualStatus;
 
-    AwningStatResult(int code, AwningIndividualStatus awningIndividualStatus) {
+    AwningStatResult(int code, AwningDeviceView awningIndividualStatus) {
         this.code = code;
         this.awningIndividualStatus = awningIndividualStatus;
     }
@@ -19,11 +20,11 @@ public enum AwningStatResult {
         return code;
     }
 
-    public AwningIndividualStatus getAwningIndividualStatus() {
+    public AwningDeviceView getAwningIndividualStatus() {
         return awningIndividualStatus;
     }
 
-	public AwningStatResult withAwningIndividualStatus(AwningIndividualStatus awningIndividualStatus2) {
+	public AwningStatResult withAwningIndividualStatus(AwningDeviceView awningIndividualStatus2) {
 		// TODO Auto-generated method stub
 		this.awningIndividualStatus=awningIndividualStatus2;
 		return SUCCESS;

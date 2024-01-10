@@ -3,7 +3,8 @@ package edu.pnu.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.Comparator;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -12,15 +13,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
-
-import edu.pnu.domain.AwningControl;
-import edu.pnu.domain.AwningControlStatus;
+import edu.pnu.domain.AwningDefaultOnly;
+import edu.pnu.domain.AwningLocationOnly;
+import edu.pnu.domain.AwningStatusOnly;
 import edu.pnu.domain.ContractDeta;
 import edu.pnu.domain.ManageArea;
+import edu.pnu.domain.other.AwningControl;
+import edu.pnu.domain.other.AwningDeviceView;
+import edu.pnu.domain.other.AwningUserMapDTO;
 import edu.pnu.jwt.persistence.MemberRepository;
-import edu.pnu.persistence.AwningControlRepository;
 import edu.pnu.persistence.AwningControlStatusRepository;
+import edu.pnu.persistence.AwningDefaultRepository;
+import edu.pnu.persistence.AwningLocationRepository;
+import edu.pnu.persistence.AwningStatusRepository;
 import edu.pnu.persistence.ContractDetaRepository;
 import edu.pnu.persistence.ManageAreaRepository;
 import edu.pnu.persistence.other.AwningIndividualStatus;
@@ -35,23 +40,33 @@ public class AwningServiceImpl implements AwningService {
 	@Autowired
 	MemberRepository memberRepository;
 	@Autowired
-	AwningControlRepository awningControlRepository;
+	AwningDefaultRepository awningDefaultRepository;
+	@Autowired
+	AwningLocationRepository awningLocationRepository;
+	@Autowired
+	AwningStatusRepository awningStatusRepository;
 	@Autowired
 	ManageAreaRepository manageAreaRepository;
 	@Autowired
 	ContractDetaRepository contractDetaRepository;
-	@Autowired
-	AwningControlStatusRepository awningControlStatusRepository;
+	
 	
 	//이하 구현서비스
 	@Override
-	public List<AwningUserMap> getAwningList(String token) {// /user/map
+	public List<AwningUserMapDTO> getAwningList(String token) {// /user/map
 		
-		List<AwningUserMap> list= awningControlRepository.findAllByUserMap();//리스트 찾아내기
+		
+		List<AwningLocationOnly> llist= awningLocationRepository.findAll();
+		List<AwningStatusOnly> slist= awningStatusRepository.findAll();
+		
+		List<AwningUserMapDTO> list=new ArrayList<>();
+		mergeResult(list,llist,slist);
 		
 		return list;
 	}
 	
+	
+
 	@Override
 	@Transactional
 	public int addAwning(String token, AwningControl awningControl,AddModify addModify) {
@@ -63,10 +78,11 @@ public class AwningServiceImpl implements AwningService {
 		if(checkAwningControlBlank(awningControl))//true 비어있음
 			return 1;
 		
+		
+		
 		List<ManageArea> list= manageAreaRepository.findByCity(awningControl.getManagementArea1());
 		Integer manageArea1234 = null;
-		AwningControl findAwningControl=null;
-		Integer contractId=null;
+		Optional<AwningDefaultOnly> findAwningControl=null;
 		if(list!=null) {
 			for(ManageArea area:list) {
 				if(area.getCity2()==null) {
@@ -86,24 +102,20 @@ public class AwningServiceImpl implements AwningService {
 			
 			if(awningControl.getAwningId()==null)
 				return 4;
-			findAwningControl=awningControlRepository.findByAwningId(awningControl.getAwningId());
+			findAwningControl=awningDefaultRepository.findById(awningControl.getAwningId());
 			
-			if(findAwningControl==null)
+			if(findAwningControl.isEmpty())
 				return 4;
-			try {
-				contractId=contractDetaRepository.findByAwningDeviceId(findAwningControl.getDeviceId()).getContractId() ;
-			} catch (Exception e) {
-				// TODO: handle exception
-				return 4;
-			}
+			
 			
 			
 			}
 			
 		try {
-			saveMethodForAddAwning(awningControl, manageArea1234,contractId);
+			saveMethodForAddAwning(awningControl, manageArea1234);
 		} catch (Exception e) {
 			// TODO: handle exception
+			e.printStackTrace();
 			return 3;
 		}
 		
@@ -116,39 +128,51 @@ public class AwningServiceImpl implements AwningService {
 		// /user/device/view/{}, AwningStatResult는 반환값용 enum이다.
 		if(isInvalidString(deviceId))
 			return AwningStatResult.DEVICE_ID_NULL_OR_BLANK;
-		AwningIndividualStatus awningIndividualStatus =awningControlRepository.findByIndvidualStatus(deviceId);
-		//프로젝션 인터페이스 
 		
-		Optional<AwningControl> awningControlOptional=awningControlRepository.findByDeviceId(deviceId);
 		
-		AwningControl awningControl=null;
-		if(awningControlOptional.isPresent())
-			awningControl=awningControlOptional.get();
-		else
-			return AwningStatResult.DEVICE_NOT_FOUND;
+		AwningDeviceView awningDeviceView=new AwningDeviceView();
 		
-		ManageArea manageArea= manageAreaRepository.findById(awningControl.getManagementArea()).get();
-		
-		awningIndividualStatus.setManagementArea1(manageArea.getCity());
-		awningIndividualStatus.
-			setManagementArea2(manageArea.getCity2()!=null?manageArea.getCity2():null);
+		AwningDefaultOnly awningDefaultOnly= awningDefaultRepository.findByDeviceId(deviceId);
+		AwningLocationOnly awningLocationOnly= awningLocationRepository.findByDeviceId(deviceId);
+		AwningStatusOnly awningStatusOnly= awningStatusRepository.findByDeviceId(deviceId);
 		ContractDeta contractDeta=contractDetaRepository.findByAwningDeviceId(deviceId);
-		if(contractDeta!=null) {
-			awningIndividualStatus.setStartDate(contractDeta.getContractStartDate());
-			awningIndividualStatus.setFinshDate(contractDeta.getContractTerminationDate());
+		
+		if(awningDefaultOnly==null)
+			return AwningStatResult.DEVICE_NOT_FOUND;
+		setAwningDeviceView(awningDefaultOnly,awningLocationOnly,awningStatusOnly,
+				contractDeta,awningDeviceView);
+		
+		
+		
+		return AwningStatResult.SUCCESS.withAwningIndividualStatus(awningDeviceView);
+	}
+	
+	
+
+
+
+	@Override
+	public List getAwningLStatList(String token,HashMap<String,String> paramMap)  {// /user/device/view
+		List<AwningDefaultOnly> dlist=awningDefaultRepository.findAll();
+		List<AwningLocationOnly> llist=awningLocationRepository.findAll();
+		List<AwningStatusOnly> slist=awningStatusRepository.findAll();
+		List<ContractDeta> clist=contractDetaRepository.findAll();
+		List<AwningDeviceView> list=new ArrayList<>();
+		
+		
+		
+		for (int i = 0; i < dlist.size(); i++) {
+		    AwningDefaultOnly defaultOnly = dlist.get(i);
+		    AwningLocationOnly locationOnly = llist.get(i);
+		    AwningStatusOnly statusOnly = slist.get(i);
+		    ContractDeta contractDeta=clist.get(i);
+		    AwningDeviceView awningDeviceView = new AwningDeviceView();
+		    setAwningDeviceView(defaultOnly, locationOnly, statusOnly, contractDeta, awningDeviceView);
+
+		    list.add(awningDeviceView);
 		}
 		
 		
-		AwningControlStatus awningControlStatus= awningControlStatusRepository.findById(deviceId).get();
-		awnvlStng(awningIndividualStatus,awningControlStatus);
-		
-		
-		return AwningStatResult.SUCCESS.withAwningIndividualStatus(awningIndividualStatus);
-	}
-	
-	@Override
-	public List getAwningLStatList(String token,HashMap<String,String> paramMap)  {// /user/device/view
-		List<AwningUserDeviceView> list=awningControlRepository.findAllByUserDevice();
 		String searchTerm=paramMap.get("searchTerm");
 		String searchCriteria=paramMap.get("searchCriteria");
 		String statusConnected=paramMap.get("statusConnected");
@@ -168,17 +192,8 @@ public class AwningServiceImpl implements AwningService {
 		}
 		List<String> filterList=keywordList.stream().skip(2).toList();
 		List<String> getFilterList=getKeywordList.stream().skip(2).toList();
-		for(AwningUserDeviceView awningUserDeviceView:list) {
-			
-			ManageArea manageArea= manageAreaRepository.findById(awningUserDeviceView.getManagementArea()).get();
-			awningUserDeviceView.setManagementArea1(manageArea.getCity());
-			if(manageArea.getCity2()!=null)
-				awningUserDeviceView.setManagementArea2(manageArea.getCity2());
-			AwningControlStatus awningControlStatus=awningControlStatusRepository.findById(awningUserDeviceView.getDeviceId()).get();
-			awningUserDeviceView.setMotorCondition(awningControlStatus.getMotorCondition());
-			awningUserDeviceView.setLightingCondition(awningControlStatus.getLightingCondition());
-			awningUserDeviceView.setBatteryCondition(awningControlStatus.getBatteryCondition());
-		}
+		
+		
 		
 		System.out.println(searchTerm+"=searchTerm "+searchCriteria+"=searchCriteria");
 		System.out.println(statusConnected+"=statusConnected "+statusLighting+"=statusLighting "+
@@ -196,16 +211,6 @@ public class AwningServiceImpl implements AwningService {
 		return list;
 	}
 	
-	
-
-	
-
-	
-
-	
-
-	
-
 	@Override
 	@Transactional
 	public int deleteAwningSeleted(String token, List<String> list) {
@@ -226,7 +231,65 @@ public class AwningServiceImpl implements AwningService {
 	
 	
 	//이하 메소드
-	private void filterResult(List<AwningUserDeviceView> list,List<String> filterList,List<String> getFilterList) {
+	private void setAwningDeviceView(AwningDefaultOnly awningDefaultOnly, AwningLocationOnly awningLocationOnly,
+			AwningStatusOnly awningStatusOnly,  ContractDeta contractDeta,
+			AwningDeviceView awningDeviceView) {
+		// TODO Auto-generated method stub
+		awningDeviceView.setAwningId(awningDefaultOnly.getAwningId());
+		awningDeviceView.setAwningMessage(awningStatusOnly.getAwningMessage());
+		awningDeviceView.setAwningOpenScheduleTime(awningDefaultOnly.getAwningOpenScheduleTime());
+		awningDeviceView.setAwningOpenTimeLeft(awningDefaultOnly.getAwningOpenTimeLeft());
+		awningDeviceView.setAwningOpenTimeRight(awningDefaultOnly.getAwningOpenTimeRight());
+		awningDeviceView.setAwningReopenTimeMinutes(awningDefaultOnly.getAwningReopenTimeMinutes());
+		awningDeviceView.setBatteryCondition(awningStatusOnly.getBatteryCondition());
+		awningDeviceView.setBatteryMessage(awningStatusOnly.getBatteryMessage());
+		awningDeviceView.setControlId(awningDefaultOnly.getControlId());
+		awningDeviceView.setDeviceId(awningDefaultOnly.getDeviceId());
+		awningDeviceView.setInstallationLocationMemo(awningLocationOnly.getInstallationLocationMemo());
+		awningDeviceView.setLastReportedDate(awningStatusOnly.getLastReportedDate());
+		awningDeviceView.setLatitude(awningLocationOnly.getLatitude());
+		awningDeviceView.setLongitude(awningLocationOnly.getLongitude());
+		Integer mamagerMentArea=awningLocationOnly.getManagementArea();
+		Optional<ManageArea> area=manageAreaRepository.findById(mamagerMentArea);
+		awningDeviceView.setManagementArea1(area.get().getCity());
+		awningDeviceView.setManagementArea2(area.get().getCity2()==null?null:area.get().getCity2());
+		awningDeviceView.setManagementNumber(awningLocationOnly.getManagementNumber());
+		awningDeviceView.setMotorCondition(awningStatusOnly.getMotorCondition());
+		awningDeviceView.setStatusAwningExpand(awningStatusOnly.getStatusAwningExpand());
+		awningDeviceView.setStatusBatteryCharge(awningStatusOnly.getStatusBatteryCharge());
+		awningDeviceView.setStatusConnected(awningStatusOnly.getStatusConnected());
+		awningDeviceView.setStatusLighting(awningStatusOnly.getStatusLighting());
+		awningDeviceView.setStatusOperationMode(awningLocationOnly.getStatusOperationMode());
+		awningDeviceView.setStatusTemperature(awningStatusOnly.getStatusTemperature());
+		awningDeviceView.setStatusWindSpeed(awningStatusOnly.getStatusWindSpeed());
+		awningDeviceView.setWindSpeedThreshold(awningDefaultOnly.getWindSpeedThreshold());
+		awningDeviceView.setLightingCondition(awningStatusOnly.getLightingCondition());
+		
+		if(contractDeta!=null) {
+			awningDeviceView.setFinishDate(contractDeta.getContractTerminationDate());
+			awningDeviceView.setStartDate(contractDeta.getContractStartDate());
+		}
+	}
+	private void mergeResult(List<AwningUserMapDTO> list, List<AwningLocationOnly> llist, List<AwningStatusOnly> slist) {
+		for(int i=0;i<llist.size();i++) {
+			AwningUserMapDTO mapDTO=new AwningUserMapDTO();
+			mapDTO.setAwningId(slist.get(i).getAwningId());
+			mapDTO.setLongitude(llist.get(i).getLongitude());
+			mapDTO.setLatitude(llist.get(i).getLatitude());
+			mapDTO.setInstallationLocationMemo(llist.get(i).getInstallationLocationMemo());
+			mapDTO.setManagementNumber(llist.get(i).getManagementNumber());
+			mapDTO.setStatusBatteryCharge(slist.get(i).getStatusBatteryCharge());
+			mapDTO.setStatusWindSpeed(slist.get(i).getStatusWindSpeed());
+			mapDTO.setStatusAwningExpand(slist.get(i).getStatusAwningExpand());
+			mapDTO.setStatusTemperature(slist.get(i).getStatusTemperature());
+			mapDTO.setStatusLighting(slist.get(i).getStatusLighting());
+			mapDTO.setStatusConnected(slist.get(i).getStatusConnected());
+			
+			list.add(mapDTO);
+		}
+		
+	}
+	private void filterResult(List<AwningDeviceView> list,List<String> filterList,List<String> getFilterList) {
 		for(int i=0;i<list.size();i++) {
 			List<String> orgnlFllst=setFilterList(list.get(i));
 			for(int j=0;j<orgnlFllst.size();j++) {
@@ -242,7 +305,7 @@ public class AwningServiceImpl implements AwningService {
 		
 	}
 
-	private List<String> setFilterList(AwningUserDeviceView view) {
+	private List<String> setFilterList(AwningDeviceView view) {
 		List<String> returnList=new ArrayList<>();
 		returnList.add(view.getStatusConnected());returnList.add(view.getStatusLighting());
 		returnList.add(view.getStatusAwningExpand());returnList.add(view.getManagementArea1());
@@ -256,7 +319,7 @@ public class AwningServiceImpl implements AwningService {
 				return true;
 		return false;
 	}
-	private void applySearch(List<AwningUserDeviceView> list,String searchTerm,String searchCriteria) {
+	private void applySearch(List<AwningDeviceView> list,String searchTerm,String searchCriteria) {
 		for(int i=0;i<list.size();i++) {
 			if(searchCriteria.equals("full")) {
 				if(!list.get(i).getInstallationLocationMemo().contains(searchTerm)&&
@@ -282,76 +345,49 @@ public class AwningServiceImpl implements AwningService {
 		return awningControlRepository.deleteAllByDeviceIdIn(list);
 	}
 	
-	private void awnvlStng(AwningIndividualStatus awningIndividualStatus, AwningControlStatus awningControlStatus) {
-		awningIndividualStatus.setMotorCondition(awningControlStatus.getMotorCondition());
-		awningIndividualStatus.setBatteryCondition(awningControlStatus.getBatteryCondition());
-		awningIndividualStatus.setLightingCondition(awningControlStatus.getLightingCondition());
-		if(!isInvalidString(awningControlStatus.getMotorMessage()))
-			awningIndividualStatus.setAwningMessage(awningControlStatus.getMotorMessage());
-		if(!isInvalidString(awningControlStatus.getBatteryMessage()))
-			awningIndividualStatus.setBatteryMessage(awningControlStatus.getBatteryMessage());
-		if(!isInvalidString(awningControlStatus.getLightingMessage()))
-			awningIndividualStatus.setLightingMessage(awningControlStatus.getLightingMessage());
-	}
+	
 
 	@Transactional
-	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234,Integer contractId) {
-			System.out.println("problem1");
-			awningControl= AwningControl.builder().awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
-			.awningOpenTimeRight(awningControl.getAwningOpenTimeRight())
-			.deviceId(awningControl.getDeviceId())
-			.installationLocationMemo(awningControl.getInstallationLocationMemo())
-			.managementArea(manageArea1234).latitude(awningControl.getLatitude()).longitude(awningControl.getLongitude())
-			.managementNumber(awningControl.getManagementNumber())
-			.windSpeedThreshold(awningControl.getWindSpeedThreshold())
-			.awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
-			.controlId(awningControl.getControlId()).awningId(awningControl.getAwningId()!=null?awningControl.getAwningId():null)
-			.startDate(awningControl.getStartDate()).finshDate(awningControl.getFinshDate()).build();
-			awningControlRepository.save(
-				awningControl
-				);
-			System.out.println("problem2");
-			System.out.println("---contractId: "+contractId);
-			Date startDate=awningControl.getStartDate();
-			Date finshDate=awningControl.getFinshDate();
-			startDate.setHours(0);
-			finshDate.setHours(0);
-			if(contractId!=null) {
-				ContractDeta contractDeta=contractDetaRepository.findById(contractId).get();
-				if(contractDeta.getContractStartDate().compareTo(awningControl.getStartDate())==0) {
-					if(contractDeta.getContractTerminationDate().compareTo(awningControl.getFinshDate())==0);
-					else
-						contractId=null;
-				}
-				else
-					contractId=null;	
-			}
-			System.out.println("contractId: "+contractId+"---");
-			ContractDeta contractDeta=ContractDeta.builder().awningControl(awningControl)
-					.contractStartDate(awningControl.getStartDate())
-					.contractTerminationDate(awningControl.getFinshDate())
-					.registrationDate(new Date())
-					.build();
-			
-			if(contractId!=null) {
-				contractDeta=ContractDeta.builder().awningControl(awningControl)
-					.contractStartDate(awningControl.getStartDate())
-					.contractTerminationDate(awningControl.getFinshDate())
-					.registrationDate(new Date())
-					.contractId(contractId)
-					.build();
-			}
-			
-			contractDetaRepository.save(
-				contractDeta
-				);
-			System.out.println("problem3");
-			awningControlStatusRepository.save(AwningControlStatus.builder().awningDeviceId(awningControl.getDeviceId()).build());
+	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
 		
+		Integer findAwningId= 
+		awningDefaultRepository.findFirstByOrderByAwningIdDesc().getAwningId();
 		
+		findAwningId++;
+		if(awningControl.getAwningId()!=null) {
+			findAwningId=awningControl.getAwningId();
+		}
+		System.out.println("findAwningId:"+findAwningId);
+		AwningDefaultOnly awningDefaultOnly= AwningDefaultOnly.builder().awningId(findAwningId).awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
+		.awningOpenTimeRight(awningControl.getAwningOpenTimeRight()).awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
+		.controlId(awningControl.getControlId()).windSpeedThreshold(awningControl.getWindSpeedThreshold())
+		.deviceId(awningControl.getDeviceId()).build();
+		
+		AwningStatusOnly awningStatusOnly=AwningStatusOnly.builder().awningId(findAwningId).deviceId(awningControl.getDeviceId())
+		.controlId(awningControl.getControlId()).build();
+		
+		AwningLocationOnly awningLocationOnly=
+				AwningLocationOnly.builder().awningId(findAwningId).controlId(awningControl.getControlId())
+				.installationLocationMemo(awningControl.getInstallationLocationMemo())
+				.latitude(awningControl.getLatitude()).longitude(awningControl.getLongitude())
+				.managementArea(manageArea1234).managementNumber(awningControl.getManagementNumber())
+				.deviceId(awningControl.getDeviceId()).build();
+		
+		ContractDeta contractDeta=ContractDeta.builder().awningDeviceId(awningControl.getDeviceId()).awningId(findAwningId)
+		.contractStartDate(awningControl.getStartDate()).contractTerminationDate(awningControl.getFinshDate())
+		.build();
+		System.out.println("problem1");
+		awningDefaultRepository.save(awningDefaultOnly);
+		System.out.println("problem2");
+		awningLocationRepository.save(awningLocationOnly);
+		System.out.println("problem3");
+		awningStatusRepository.save(awningStatusOnly);
+		System.out.println("problem4");
+		contractDetaRepository.save(contractDeta);
 	}
 	
 	private boolean checkAwningControlBlank(AwningControl awningControl) {
+		
 		
 		if(awningControl.getAwningOpenTimeLeft().isBlank())
 			return true;
@@ -365,6 +401,7 @@ public class AwningServiceImpl implements AwningService {
 			return true;
 		if(awningControl.getManagementArea1().isBlank())
 			return true;
+		
 		
 		return false;
 	}
