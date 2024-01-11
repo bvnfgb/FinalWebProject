@@ -2,10 +2,9 @@ package edu.pnu.domain.other;
 
 import java.math.BigDecimal;
 
-import edu.pnu.persistence.other.AwningUserMap;
 import lombok.Data;
 @Data
-public class AwningUserMapDTO implements AwningUserMap{
+public class AwningUserMapDTO {
 	private String statusConnected;
     private String statusLighting;
     private BigDecimal statusTemperature;
@@ -17,4 +16,14 @@ public class AwningUserMapDTO implements AwningUserMap{
     private BigDecimal latitude;
     private BigDecimal longitude;
     private Integer awningId;
+    
+    
+    private String deviceId;
+    private Integer controlId;
+    private String awningOpenTimeLeft;
+    private String awningOpenTimeRight;
+    private String lightingCondition;
+    private String motorCondition;
+    private String batteryCondition;
+    private String statusOperationMode;
 }

@@ -79,7 +79,7 @@ public class AwningController {
 		int deleteCount=awningService.deleteAwningSeleted(token, list);
 		if(deleteCount==0)
 			return ResponseEntity.noContent().build();
-		return ResponseEntity.ok("Awning deletion successful!["+deleteCount+"]");
+		return ResponseEntity.ok("Awning deletion successful!["+deleteCount/4+"]");
 	}
 	@PutMapping("/admin/device/mod")
 	public ResponseEntity<?> modAwning(@RequestHeader("Authorization") String token,@RequestBody AwningControl awningControl){
@@ -96,5 +96,11 @@ public class AwningController {
 			return ResponseEntity.internalServerError().body("Sending ER");
 		return ResponseEntity.ok("Sending success");
 		
+	}
+	@PostMapping("/user/stat/log")
+	public ResponseEntity<?> awnngRcvd(@RequestHeader("Authorization") String token,@RequestBody HashMap<String, String> unknownObject){
+		
+		
+		return null;
 	}
 }

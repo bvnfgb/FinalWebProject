@@ -11,16 +11,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class ContractDeta {
-	// 연관관계를 위한 엔티티
-	
-	//일반 DB항목
+public class ContractDetaLog {
 	@Column(columnDefinition = "date ")
 	private Date contractStartDate;
 
@@ -32,10 +28,11 @@ public class ContractDeta {
 	private Date registrationDate=new Date(new java.util.Date().getTime());
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer contractId;
 	
 	private Integer awningId;
 
 	@Column(columnDefinition = "varchar(20) not null")
 	private String awningDeviceId;
-
 }

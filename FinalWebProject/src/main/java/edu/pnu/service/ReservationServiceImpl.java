@@ -35,7 +35,8 @@ public class ReservationServiceImpl implements ReservationService {
 	@Override
 	public int dltRsrvt(String token, HashMap<String, List<?>> hashMap) {
 		if(hashMap.get("deviceId")!=null) {
-			
+			List<?> deviceId=hashMap.get("deviceId");
+			System.out.println("deviceId "+deviceId);
 		}
 		return 0;
 	}

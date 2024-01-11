@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface AwningDefaultRepository extends JpaRepository<AwningDefaultOnly, Integer> {
 	AwningDefaultOnly findByDeviceId(String deviceId);
-
+	int deleteAllByDeviceIdIn(List<String> list);
 	AwningDefaultOnly findFirstByOrderByAwningIdDesc();
 	 
 }

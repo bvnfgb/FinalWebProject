@@ -1,13 +1,16 @@
 package edu.pnu.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pnu.domain.ReservationDeta;
@@ -33,5 +36,10 @@ public class ReservationController {
 		List<ReservationDeta> getReservList=reservationService.getReservList(token, deviceId);
 		
 		return ResponseEntity.ok(getReservList);
+	}
+	@DeleteMapping("/user/reserv/del")
+	ResponseEntity<?> delRsrvt(@RequestHeader("Authorization")String token,@RequestBody HashMap<String, List<String>> hashMap){
+		return null;
+		
 	}
 }

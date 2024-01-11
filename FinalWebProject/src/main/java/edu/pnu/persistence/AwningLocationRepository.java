@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface AwningLocationRepository extends JpaRepository<AwningLocationOnly, Integer> {
 	AwningLocationOnly findByDeviceId(String deviceId);
+	int deleteAllByDeviceIdIn(List<String> list);
 }

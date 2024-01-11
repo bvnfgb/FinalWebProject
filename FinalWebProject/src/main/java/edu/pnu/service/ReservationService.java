@@ -9,4 +9,5 @@ public interface ReservationService {
 	int adawnRsrvt(String token, ReservationDeta reservationDeta);
 	List<ReservationDeta> getReservList(String token,String deviceId);
 	int dltRsrvt(String token, HashMap<String, List<?>> hashMap);
+	
 }

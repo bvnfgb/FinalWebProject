@@ -19,7 +19,7 @@ public class AwningControl {
 	Integer controlId;
 	String deviceId;
 	String managementNumber;
-	Date finshDate;
+	Date finishDate;
 	Date startDate;
 	Integer awningId;
 	

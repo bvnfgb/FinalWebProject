@@ -17,15 +17,16 @@ import edu.pnu.domain.AwningDefaultOnly;
 import edu.pnu.domain.AwningLocationOnly;
 import edu.pnu.domain.AwningStatusOnly;
 import edu.pnu.domain.ContractDeta;
+import edu.pnu.domain.ContractDetaLog;
 import edu.pnu.domain.ManageArea;
 import edu.pnu.domain.other.AwningControl;
 import edu.pnu.domain.other.AwningDeviceView;
 import edu.pnu.domain.other.AwningUserMapDTO;
 import edu.pnu.jwt.persistence.MemberRepository;
-import edu.pnu.persistence.AwningControlStatusRepository;
 import edu.pnu.persistence.AwningDefaultRepository;
 import edu.pnu.persistence.AwningLocationRepository;
 import edu.pnu.persistence.AwningStatusRepository;
+import edu.pnu.persistence.ContractDetaLogRepository;
 import edu.pnu.persistence.ContractDetaRepository;
 import edu.pnu.persistence.ManageAreaRepository;
 import edu.pnu.persistence.other.AwningIndividualStatus;
@@ -49,7 +50,8 @@ public class AwningServiceImpl implements AwningService {
 	ManageAreaRepository manageAreaRepository;
 	@Autowired
 	ContractDetaRepository contractDetaRepository;
-	
+	@Autowired
+	ContractDetaLogRepository contractDetaLogRepository;
 	
 	//이하 구현서비스
 	@Override
@@ -58,9 +60,10 @@ public class AwningServiceImpl implements AwningService {
 		
 		List<AwningLocationOnly> llist= awningLocationRepository.findAll();
 		List<AwningStatusOnly> slist= awningStatusRepository.findAll();
+		List<AwningDefaultOnly> dlist=awningDefaultRepository.findAll();
 		
 		List<AwningUserMapDTO> list=new ArrayList<>();
-		mergeResult(list,llist,slist);
+		mergeResult(list,llist,slist,dlist);
 		
 		return list;
 	}
@@ -112,7 +115,7 @@ public class AwningServiceImpl implements AwningService {
 			}
 			
 		try {
-			saveMethodForAddAwning(awningControl, manageArea1234);
+			saveMethodForAddAwning(awningControl, manageArea1234,addModify);
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -270,7 +273,8 @@ public class AwningServiceImpl implements AwningService {
 			awningDeviceView.setStartDate(contractDeta.getContractStartDate());
 		}
 	}
-	private void mergeResult(List<AwningUserMapDTO> list, List<AwningLocationOnly> llist, List<AwningStatusOnly> slist) {
+	private void mergeResult(List<AwningUserMapDTO> list, List<AwningLocationOnly> llist, 
+			List<AwningStatusOnly> slist, List<AwningDefaultOnly> dlist) {
 		for(int i=0;i<llist.size();i++) {
 			AwningUserMapDTO mapDTO=new AwningUserMapDTO();
 			mapDTO.setAwningId(slist.get(i).getAwningId());
@@ -284,6 +288,15 @@ public class AwningServiceImpl implements AwningService {
 			mapDTO.setStatusTemperature(slist.get(i).getStatusTemperature());
 			mapDTO.setStatusLighting(slist.get(i).getStatusLighting());
 			mapDTO.setStatusConnected(slist.get(i).getStatusConnected());
+			
+			mapDTO.setDeviceId(llist.get(i).getDeviceId());
+			mapDTO.setControlId(llist.get(i).getControlId());
+			mapDTO.setAwningOpenTimeLeft(dlist.get(i).getAwningOpenTimeLeft());
+			mapDTO.setAwningOpenTimeRight(dlist.get(i).getAwningOpenTimeRight());
+			mapDTO.setLightingCondition(slist.get(i).getLightingCondition());
+			mapDTO.setMotorCondition(slist.get(i).getMotorCondition());
+			mapDTO.setBatteryCondition(slist.get(i).getBatteryCondition());
+			mapDTO.setStatusOperationMode(llist.get(i).getStatusOperationMode());
 			
 			list.add(mapDTO);
 		}
@@ -342,19 +355,24 @@ public class AwningServiceImpl implements AwningService {
 	}
 	@Transactional
 	private int deleteAwningList(List<String> list) {
-		return awningControlRepository.deleteAllByDeviceIdIn(list);
+		int result=awningDefaultRepository.deleteAllByDeviceIdIn(list);
+		result+=awningStatusRepository.deleteAllByDeviceIdIn(list);
+		result+=awningLocationRepository.deleteAllByDeviceIdIn(list);
+		result+=contractDetaRepository.deleteAllByAwningDeviceIdIn(list);
+		return result;
 	}
 	
 	
 
 	@Transactional
-	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234) {
+	private void saveMethodForAddAwning(AwningControl awningControl,Integer manageArea1234,AddModify addModify) {
 		
 		Integer findAwningId= 
 		awningDefaultRepository.findFirstByOrderByAwningIdDesc().getAwningId();
 		
 		findAwningId++;
 		if(awningControl.getAwningId()!=null) {
+			if(addModify!=AddModify.ADD)
 			findAwningId=awningControl.getAwningId();
 		}
 		System.out.println("findAwningId:"+findAwningId);
@@ -374,8 +392,11 @@ public class AwningServiceImpl implements AwningService {
 				.deviceId(awningControl.getDeviceId()).build();
 		
 		ContractDeta contractDeta=ContractDeta.builder().awningDeviceId(awningControl.getDeviceId()).awningId(findAwningId)
-		.contractStartDate(awningControl.getStartDate()).contractTerminationDate(awningControl.getFinshDate())
+		.contractStartDate(awningControl.getStartDate()).contractTerminationDate(awningControl.getFinishDate())
 		.build();
+		ContractDetaLog contractDetaLog=ContractDetaLog.builder().awningDeviceId(awningControl.getDeviceId()).awningId(findAwningId)
+				.contractStartDate(awningControl.getStartDate()).contractTerminationDate(awningControl.getFinishDate())
+				.build();
 		System.out.println("problem1");
 		awningDefaultRepository.save(awningDefaultOnly);
 		System.out.println("problem2");
@@ -384,6 +405,8 @@ public class AwningServiceImpl implements AwningService {
 		awningStatusRepository.save(awningStatusOnly);
 		System.out.println("problem4");
 		contractDetaRepository.save(contractDeta);
+		System.out.println("problem5");
+		contractDetaLogRepository.save(contractDetaLog);
 	}
 	
 	private boolean checkAwningControlBlank(AwningControl awningControl) {
