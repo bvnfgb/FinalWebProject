@@ -38,4 +38,5 @@ public class AwningDeviceView {
     private Integer statusBatteryCharge;
     private Integer awningId;
     private String statusOperationMode;
+    private Integer company;
 }

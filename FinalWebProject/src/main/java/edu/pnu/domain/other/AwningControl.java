@@ -29,4 +29,6 @@ public class AwningControl {
 	String statusAwningExpand;
 	BigDecimal statusWindSpeed;
 	Integer statusBatteryCharge;
+	
+	Integer company;
 }

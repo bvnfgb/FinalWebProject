@@ -231,7 +231,11 @@ public class AwningServiceImpl implements AwningService {
 		
 	}
 	
-	
+	@Override
+	public void addAwningLog(String token, HashMap<String, String> unknownObject) {
+		// TODO Auto-generated method stub
+		unknownObject.get("deviceId");
+	}
 	
 	//이하 메소드
 	private void setAwningDeviceView(AwningDefaultOnly awningDefaultOnly, AwningLocationOnly awningLocationOnly,
@@ -268,6 +272,8 @@ public class AwningServiceImpl implements AwningService {
 		awningDeviceView.setWindSpeedThreshold(awningDefaultOnly.getWindSpeedThreshold());
 		awningDeviceView.setLightingCondition(awningStatusOnly.getLightingCondition());
 		
+		awningDeviceView.setCompany(awningDefaultOnly.getCompany());
+		
 		if(contractDeta!=null) {
 			awningDeviceView.setFinishDate(contractDeta.getContractTerminationDate());
 			awningDeviceView.setStartDate(contractDeta.getContractStartDate());
@@ -297,6 +303,8 @@ public class AwningServiceImpl implements AwningService {
 			mapDTO.setMotorCondition(slist.get(i).getMotorCondition());
 			mapDTO.setBatteryCondition(slist.get(i).getBatteryCondition());
 			mapDTO.setStatusOperationMode(llist.get(i).getStatusOperationMode());
+			
+			mapDTO.setCompany(dlist.get(i).getCompany());
 			
 			list.add(mapDTO);
 		}
@@ -379,7 +387,7 @@ public class AwningServiceImpl implements AwningService {
 		AwningDefaultOnly awningDefaultOnly= AwningDefaultOnly.builder().awningId(findAwningId).awningOpenTimeLeft(awningControl.getAwningOpenTimeLeft())
 		.awningOpenTimeRight(awningControl.getAwningOpenTimeRight()).awningReopenTimeMinutes(awningControl.getAwningReopenTimeMinutes())
 		.controlId(awningControl.getControlId()).windSpeedThreshold(awningControl.getWindSpeedThreshold())
-		.deviceId(awningControl.getDeviceId()).build();
+		.deviceId(awningControl.getDeviceId()).company(awningControl.getCompany()).build();
 		
 		AwningStatusOnly awningStatusOnly=AwningStatusOnly.builder().awningId(findAwningId).deviceId(awningControl.getDeviceId())
 		.controlId(awningControl.getControlId()).build();
@@ -451,6 +459,8 @@ public class AwningServiceImpl implements AwningService {
 			return false;
 		if(awningControl.getManagementArea1()==null)
 			return false;
+		if(awningControl.getCompany()==null)
+			return false;
 		
 		return true;
 	}
@@ -463,6 +473,43 @@ public class AwningServiceImpl implements AwningService {
 		return false;
 		
 	}
+
+
+
+	@Override
+	public HashMap<String, Integer> quickSummaryReply(String token) {
+		// TODO Auto-generated method stub
+		HashMap<String, Integer> failureSummary=new HashMap<>();
+		failureSummary.put("배터리정상", awningStatusRepository.findByBatteryCondition("normal").size());
+		failureSummary.put("배터리경고", awningStatusRepository.findByBatteryCondition("warning").size());
+		failureSummary.put("배터리고장", awningStatusRepository.findByBatteryCondition("crush").size());
+		
+		failureSummary.put("모터고장", awningStatusRepository.findByMotorCondition("crush").size());
+		failureSummary.put("모터경고", awningStatusRepository.findByMotorCondition("warning").size());
+		failureSummary.put("모터정상", awningStatusRepository.findByMotorCondition("normal").size());
+		
+		failureSummary.put("조명고장", awningStatusRepository.findByLightingCondition("crush").size());
+		failureSummary.put("조명경고", awningStatusRepository.findByLightingCondition("warning").size());
+		failureSummary.put("조명정상", awningStatusRepository.findByLightingCondition("normal").size());
+		
+		List<AwningStatusOnly> list=awningStatusRepository.findAll();
+		int listcount=0;
+		for(AwningStatusOnly awningStatusOnly:list) {
+			if(awningStatusOnly.getBatteryCondition().compareTo("normal")==0)
+				if(awningStatusOnly.getLightingCondition().compareTo("normal")==0)
+					if(awningStatusOnly.getMotorCondition().compareTo("normal")==0)
+						listcount+=1;
+		}
+		
+		failureSummary.put("총설치댓수", awningStatusRepository.findAll().size());
+		failureSummary.put("정상동작댓수", listcount);
+		failureSummary.put("차양막가동댓수", awningStatusRepository.findByStatusAwningExpand("on").size());
+		return failureSummary;
+	}
+
+
+
+	
 
 	
 

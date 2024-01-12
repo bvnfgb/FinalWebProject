@@ -23,60 +23,59 @@ import lombok.ToString;
 @Setter
 public class AwningStatusLog {
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'normal'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	private String lightingCondition="normal";
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'normal'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	private String motorCondition="normal";
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'normal'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	private String batteryCondition="normal";
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	private String lightingMessage=null;
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	@Builder.Default
 	private String awningMessage=null;
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(20) default NULL")
 	private String batteryMessage=null;
 	@Column(columnDefinition = "timestamp")
-	private Timestamp lastReportedDate;
-	@Column
+	private Timestamp reportedDate;
+	@Column(nullable = false)
 	
 	private Integer awningId;
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer logId;
 	
-	@Column(nullable = false, columnDefinition = "varchar(10) default 'off'")
+	@Column( columnDefinition = "varchar(10) default NULL")
 	@Builder.Default
 	private String statusConnected="off";
 	
-	@Column(nullable = false,columnDefinition = "varchar(10) default 'off'")
+	@Column(columnDefinition = "varchar(10) default NULL")
 	@Builder.Default
 	private String statusLighting="off";
 	
-	@Column(nullable = false,columnDefinition = "varchar(10) default 'off'")
+	@Column(columnDefinition = "varchar(10) default NULL")
 	@Builder.Default
 	private String statusAwningExpand="off";
 	
-	@Column(nullable = false,columnDefinition = "decimal(4,1) default '0.0' ")
+	@Column(columnDefinition = "decimal(4,1) default NULL ")
 	@Builder.Default
 	private BigDecimal statusTemperature=new BigDecimal(0.0);
 	
-	@Column(nullable = false,columnDefinition = "decimal(3,1) default '0.0'") 
+	@Column(columnDefinition = "decimal(3,1) default null") 
 	@Builder.Default
 	private BigDecimal statusWindSpeed=new BigDecimal(0.0);
 	
-	@Column(nullable = false,columnDefinition = "int default '0'")
+	@Column(columnDefinition = "int default null")
 	@Builder.Default
 	private Integer statusBatteryCharge=0;
-	@Column(unique = true
-			,columnDefinition = "varchar(20) not null")
+	@Column(columnDefinition = "varchar(20) not null")
 	
 	private String deviceId;
 	
-	@Column(nullable = false,unique = true)
+	@Column(nullable = false)
 	private Integer controlId;
 }

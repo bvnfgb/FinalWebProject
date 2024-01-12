@@ -26,4 +26,5 @@ public class AwningUserMapDTO {
     private String motorCondition;
     private String batteryCondition;
     private String statusOperationMode;
+    private Integer company;
 }

@@ -54,4 +54,6 @@ public class AwningDefaultOnly {
 	
 	@Column(nullable = false,unique = true)
 	private Integer controlId;
+	
+	private Integer company;
 }

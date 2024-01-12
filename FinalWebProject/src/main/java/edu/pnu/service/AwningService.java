@@ -16,5 +16,6 @@ public interface AwningService {
 	AwningStatResult getAwningStat(String token, String deviceId);
 	List getAwningLStatList(String token,HashMap<String,String> paramMap);
 	int deleteAwningSeleted(String token,List<String> list);
-	
+	void addAwningLog(String token,HashMap<String, String> unknownObject);
+	HashMap<String, Integer> quickSummaryReply(String token);
 }

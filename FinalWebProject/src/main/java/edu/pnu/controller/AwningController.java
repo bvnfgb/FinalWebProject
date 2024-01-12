@@ -103,4 +103,8 @@ public class AwningController {
 		
 		return null;
 	}
+	@GetMapping("/user/summary")
+	public ResponseEntity<?> quickSummaryReply(@RequestHeader("Authorization") String token){
+		return ResponseEntity.ok(awningService.quickSummaryReply(token)) ;
+	}
 }
