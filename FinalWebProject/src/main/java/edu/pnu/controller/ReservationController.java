@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.pnu.domain.ReservationDeta;
@@ -22,8 +20,8 @@ public class ReservationController {
 	ReservationService reservationService;
 	
 	@PostMapping("/user/reserv/add")
-	ResponseEntity<?> adawnRsrvt(@RequestHeader("Authorization") String token,@RequestBody ReservationDeta deta){
-		int addResult=reservationService.adawnRsrvt(token,deta);
+	ResponseEntity<?> adawnRsrvt(@RequestBody ReservationDeta deta){
+		int addResult=reservationService.adawnRsrvt(deta);
 		if(addResult==0)
 			return ResponseEntity.ok().build();
 		else if(addResult==1)
@@ -32,13 +30,17 @@ public class ReservationController {
 			return ResponseEntity.internalServerError().build();
 	}
 	@GetMapping("/user/reserv/view")
-	ResponseEntity<?> getReservList(@RequestHeader("Authorization") String token,@RequestHeader("deviceId") String deviceId){
-		List<ReservationDeta> getReservList=reservationService.getReservList(token, deviceId);
-		
+	ResponseEntity<?> getReservList( String deviceId){
+		List<ReservationDeta> getReservList=reservationService.getReservList( deviceId);
+		for(ReservationDeta deta:getReservList) {
+			System.out.println("->"+deta.toString());
+			
+		}
 		return ResponseEntity.ok(getReservList);
 	}
 	@DeleteMapping("/user/reserv/del")
-	ResponseEntity<?> delRsrvt(@RequestHeader("Authorization")String token,@RequestBody HashMap<String, List<String>> hashMap){
+	ResponseEntity<?> delRsrvt(@RequestBody HashMap<String, List<String>> hashMap){
+		reservationService.dltRsrvt( hashMap);
 		return null;
 		
 	}

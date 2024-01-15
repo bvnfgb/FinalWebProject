@@ -14,7 +14,7 @@ public class ReservationServiceImpl implements ReservationService {
 	ReservationDetaRepository detaRepository;
 	//이하 구현 서비스
 	@Override
-	public int adawnRsrvt(String token, ReservationDeta detail) {
+	public int adawnRsrvt(ReservationDeta detail) {
 		
 		if(isInvalidReserv(detail))
 			return 1;
@@ -28,14 +28,15 @@ public class ReservationServiceImpl implements ReservationService {
 		return 0;
 	}
 	@Override
-	public List<ReservationDeta> getReservList(String token, String deviceId) {
+	public List<ReservationDeta> getReservList( String deviceId) {
 		List<ReservationDeta> findList= detaRepository.findByAwningDeviceId(deviceId);
 		return findList;
 	}
 	@Override
-	public int dltRsrvt(String token, HashMap<String, List<?>> hashMap) {
+	public int dltRsrvt(HashMap<String, List<String>> hashMap) {
+		// /user/reserv/del
 		if(hashMap.get("deviceId")!=null) {
-			List<?> deviceId=hashMap.get("deviceId");
+			List<String> deviceId=hashMap.get("deviceId");
 			System.out.println("deviceId "+deviceId);
 		}
 		return 0;

@@ -11,7 +11,7 @@ public class AwningDeviceView {
     private String motorCondition;
     private String batteryCondition;
     private String lightingMessage;
-    private String awningMessage;
+    private String motorMessage;
     private String batteryMessage;
     private Date startDate;
     private Date finishDate;

@@ -1,7 +1,6 @@
 package edu.pnu.service.other;
 
 import edu.pnu.domain.other.AwningDeviceView;
-import edu.pnu.persistence.other.AwningIndividualStatus;
 
 public enum AwningStatResult {
     SUCCESS(0, null),

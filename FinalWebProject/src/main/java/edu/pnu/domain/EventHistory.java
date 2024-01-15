@@ -1,10 +1,14 @@
 package edu.pnu.domain;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,20 +20,25 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventHistory {
 	@Id
-	private Long eventId;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer seq;
 	
-	@Column(nullable = false,length = 20)
-	private String manageNum;
+	private Integer awningId;
 	
-	@Column(nullable = false)
-	private Integer contId;
+	@Column(length = 10)
+	private String eventType;//제어변경수신 (변경)있음/없음
 	
-	@Column(nullable = false,length = 50)
-	private String installLocaMemo;
+	@Column(length = 10)
+	private String Type;//보냄/받음
 	
-	@Column(nullable = false,columnDefinition = "timestamp default current_timestamp")
-	private Timestamp eventDate;
+	@Column(length = 10)
+	private String eventType2;//배터리상태 정상/경고
 	
-	@Column(nullable = false)
-	private Integer manageArea;
+	@Column(length = 10)
+	private String eventType3;//모터상태 정상/경고
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@Builder.Default
+	@Column(columnDefinition = "timestamp")
+	private Date reportedTime=new Date();
 }

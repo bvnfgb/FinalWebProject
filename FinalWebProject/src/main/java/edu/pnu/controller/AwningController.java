@@ -11,10 +11,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.pnu.domain.AwningStatusLog;
+import edu.pnu.domain.Event;
 import edu.pnu.domain.other.AwningControl;
 import edu.pnu.service.AwningService;
 import edu.pnu.service.other.AddModify;
@@ -28,18 +29,18 @@ public class AwningController {
 	@Autowired
 	private WebSocketService webSocketService;
 	@PostMapping("/user/map")
-	public ResponseEntity<?> getAwningList(@RequestHeader("Authorization") String token) {
+	public ResponseEntity<?> getAwningList() {
 		
 		
-		List list=awningService.getAwningList(token);
+		List list=awningService.getAwningList();
 		if(list!=null)
 			return ResponseEntity.ok(list);
 		else
 			return ResponseEntity.noContent().build();
 	}
 	@PostMapping("/admin/device/add")
-	public ResponseEntity<?> addAwning(@RequestHeader("Authorization") String token,@RequestBody AwningControl awningControl){
-		int addResult=awningService.addAwning(token, awningControl,AddModify.ADD);
+	public ResponseEntity<?> addAwning(@RequestBody AwningControl awningControl){
+		int addResult=awningService.addAwning( awningControl,AddModify.ADD);
 		if(addResult==1)
 			return ResponseEntity.badRequest().body("Incomplete Item");
 		else if(addResult==2)
@@ -53,18 +54,18 @@ public class AwningController {
 	}
 	
 	@GetMapping("/user/device/view")
-	public ResponseEntity<?> getAwningLStatList(@RequestHeader("Authorization") String token
-			,@RequestParam HashMap<String,String> paramMap){
+	public ResponseEntity<?> getAwningLStatList(
+			@RequestParam HashMap<String,String> paramMap){
 		
-		List list=awningService.getAwningLStatList(token,paramMap);
+		List list=awningService.getAwningLStatList(paramMap);
 		if(list!=null)
 			return ResponseEntity.ok(list);
 		return ResponseEntity.noContent().build();
 	}
 	
 	@GetMapping("/user/device/view/{deviceId}")
-	public ResponseEntity<?> getAwningStat(@RequestHeader("Authorization") String token,@PathVariable String deviceId){
-		AwningStatResult getSingleResult= awningService.getAwningStat(token,deviceId);
+	public ResponseEntity<?> getAwningStat(@PathVariable String deviceId){
+		AwningStatResult getSingleResult= awningService.getAwningStat(deviceId);
 		if(getSingleResult==AwningStatResult.DEVICE_ID_NULL_OR_BLANK)
 			return ResponseEntity.badRequest().body("Send deviceId!");
 		else if(getSingleResult==AwningStatResult.DEVICE_NOT_FOUND)
@@ -74,37 +75,38 @@ public class AwningController {
 		
 	}
 	@DeleteMapping("/admin/device/del")
-	public ResponseEntity<?> deleteAwningSeleted(@RequestHeader("Authorization") String token,@RequestBody List<String> list){
+	public ResponseEntity<?> deleteAwningSeleted(@RequestBody List<String> list){
 		
-		int deleteCount=awningService.deleteAwningSeleted(token, list);
+		int deleteCount=awningService.deleteAwningSeleted( list);
 		if(deleteCount==0)
 			return ResponseEntity.noContent().build();
 		return ResponseEntity.ok("Awning deletion successful!["+deleteCount/4+"]");
 	}
 	@PutMapping("/admin/device/mod")
-	public ResponseEntity<?> modAwning(@RequestHeader("Authorization") String token,@RequestBody AwningControl awningControl){
-		int modResult=awningService.addAwning(token, awningControl, AddModify.MODIFY);
+	public ResponseEntity<?> modAwning(@RequestBody AwningControl awningControl){
+		int modResult=awningService.addAwning( awningControl, AddModify.MODIFY);
 		if(modResult==4)
 			return ResponseEntity.badRequest().body("No Awning Id!");
 		return ResponseEntity.ok("Modification successful!");
 		
 	}
-	@PostMapping("/user/test/send")
-	public ResponseEntity<?> sendText(@RequestHeader("Authorization") String token,@RequestBody HashMap<String,String> jsonObject ){
-		int sendResult=webSocketService.sendTest(jsonObject);
+	@PostMapping("/user/event/receive")
+	public ResponseEntity<?> sendText(@RequestBody Event event ){
+		int sendResult=webSocketService.sendEvent(event);
+		int saveResult=awningService.saveEvent(event);
 		if(sendResult!=0)
 			return ResponseEntity.internalServerError().body("Sending ER");
 		return ResponseEntity.ok("Sending success");
 		
 	}
 	@PostMapping("/user/stat/log")
-	public ResponseEntity<?> awnngRcvd(@RequestHeader("Authorization") String token,@RequestBody HashMap<String, String> unknownObject){
+	public ResponseEntity<?> awnngRcvd(@RequestBody AwningStatusLog awningStatusLog){
+		awningService.addAwningLog(awningStatusLog);
 		
-		
-		return null;
+		return ResponseEntity.ok(awningStatusLog);
 	}
 	@GetMapping("/user/summary")
-	public ResponseEntity<?> quickSummaryReply(@RequestHeader("Authorization") String token){
-		return ResponseEntity.ok(awningService.quickSummaryReply(token)) ;
+	public ResponseEntity<?> quickSummaryReply(){
+		return ResponseEntity.ok(awningService.quickSummaryReply()) ;
 	}
 }

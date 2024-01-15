@@ -32,16 +32,17 @@ public class AwningStatusLog {
 	@Column(columnDefinition = "varchar(20) default NULL")
 	private String batteryCondition="normal";
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default NULL")
+	@Column(columnDefinition = "varchar(100) default NULL")
 	private String lightingMessage=null;
-	@Column(columnDefinition = "varchar(20) default NULL")
+	@Column(columnDefinition = "varchar(100) default NULL")
 	@Builder.Default
-	private String awningMessage=null;
+	private String motorMessage=null;
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default NULL")
+	@Column(columnDefinition = "varchar(100) default NULL")
 	private String batteryMessage=null;
 	@Column(columnDefinition = "timestamp")
-	private Timestamp reportedDate;
+	@Builder.Default
+	private Timestamp reportedDate=new Timestamp(System.currentTimeMillis());
 	@Column(nullable = false)
 	
 	private Integer awningId;

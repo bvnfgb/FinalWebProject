@@ -8,12 +8,18 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.util.Pair;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ShortForecast {
 	public void test1() throws Exception {
-		
+	
+	@SuppressWarnings("unused")
+	Pair<String, String> pair;
+	pair=Pair.of(null, null);
+	
 	
 	StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"); /*URL*/
     urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=QC3IqYk7CfC8vM6GqkDj1gYFbZdJbl1vNV8ly8VR7G558o8KIvXJ0vQAzh4G4RtJIxWgcafouF%2BJIejePzKthw%3D%3D"); /*Service Key*/

@@ -3,14 +3,9 @@ package edu.pnu.domain;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,13 +32,13 @@ public class AwningStatusOnly {
 	@Column(columnDefinition = "varchar(20) default 'normal'")
 	private String batteryCondition="normal";
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(100) default 'null'")
 	private String lightingMessage=null;
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(100) default 'null'")
 	@Builder.Default
-	private String awningMessage=null;
+	private String motorMessage=null;
 	@Builder.Default
-	@Column(columnDefinition = "varchar(20) default 'null'")
+	@Column(columnDefinition = "varchar(100) default 'null'")
 	private String batteryMessage=null;
 	@Column(columnDefinition = "timestamp")
 	private Timestamp lastReportedDate;
@@ -81,5 +76,13 @@ public class AwningStatusOnly {
 	
 	@Column(nullable = false,unique = true)
 	private Integer controlId;
+	
+	public boolean isNormal() {
+		if ((batteryCondition.compareTo("normal")==0)&&
+			(lightingCondition.compareTo("normal")==0)&&
+			(motorCondition.compareTo("normal")==0))
+			return true;
+		return false;
+	}
 	
 }

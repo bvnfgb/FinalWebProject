@@ -12,11 +12,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@ToString
 public class ReservationDeta {
 	@Column(nullable = false, length = 10)
 	private String reservationItems;
@@ -43,4 +45,7 @@ public class ReservationDeta {
 	@Column(nullable = false,columnDefinition = "timestamp default current_timestamp")
 	@Builder.Default
 	private Timestamp registrationDate=new Timestamp(System.currentTimeMillis());
+	
+	@Column(length = 20)
+	private String repeatDayTime;
 }

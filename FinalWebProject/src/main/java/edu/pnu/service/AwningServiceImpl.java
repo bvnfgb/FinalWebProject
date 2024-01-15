@@ -3,8 +3,6 @@ package edu.pnu.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.sql.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -15,9 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import edu.pnu.domain.AwningDefaultOnly;
 import edu.pnu.domain.AwningLocationOnly;
+import edu.pnu.domain.AwningStatusLog;
 import edu.pnu.domain.AwningStatusOnly;
 import edu.pnu.domain.ContractDeta;
 import edu.pnu.domain.ContractDetaLog;
+import edu.pnu.domain.Event;
+import edu.pnu.domain.EventHistory;
 import edu.pnu.domain.ManageArea;
 import edu.pnu.domain.other.AwningControl;
 import edu.pnu.domain.other.AwningDeviceView;
@@ -25,13 +26,13 @@ import edu.pnu.domain.other.AwningUserMapDTO;
 import edu.pnu.jwt.persistence.MemberRepository;
 import edu.pnu.persistence.AwningDefaultRepository;
 import edu.pnu.persistence.AwningLocationRepository;
+import edu.pnu.persistence.AwningStatusLogRepository;
 import edu.pnu.persistence.AwningStatusRepository;
 import edu.pnu.persistence.ContractDetaLogRepository;
 import edu.pnu.persistence.ContractDetaRepository;
+import edu.pnu.persistence.EventHisRepository;
+import edu.pnu.persistence.EventRepository;
 import edu.pnu.persistence.ManageAreaRepository;
-import edu.pnu.persistence.other.AwningIndividualStatus;
-import edu.pnu.persistence.other.AwningUserDeviceView;
-import edu.pnu.persistence.other.AwningUserMap;
 import edu.pnu.service.other.AddModify;
 import edu.pnu.service.other.AwningStatResult;
 @Service
@@ -52,10 +53,15 @@ public class AwningServiceImpl implements AwningService {
 	ContractDetaRepository contractDetaRepository;
 	@Autowired
 	ContractDetaLogRepository contractDetaLogRepository;
-	
+	@Autowired
+	AwningStatusLogRepository awningStatusLogRepository;
+	@Autowired
+	EventRepository eventRepository;
+	@Autowired
+	EventHisRepository eventHisRepository;
 	//이하 구현서비스
 	@Override
-	public List<AwningUserMapDTO> getAwningList(String token) {// /user/map
+	public List<AwningUserMapDTO> getAwningList() {// /user/map
 		
 		
 		List<AwningLocationOnly> llist= awningLocationRepository.findAll();
@@ -72,7 +78,7 @@ public class AwningServiceImpl implements AwningService {
 
 	@Override
 	@Transactional
-	public int addAwning(String token, AwningControl awningControl,AddModify addModify) {
+	public int addAwning( AwningControl awningControl,AddModify addModify) {
 		// /admin/device/add , 특별한 반환값이 없기에 int로 결과를 알려준다.
 		System.out.println(awningControl.toString()+"=awningControl");
 		
@@ -127,7 +133,7 @@ public class AwningServiceImpl implements AwningService {
 		return 0;
 	}
 	@Override
-	public AwningStatResult getAwningStat(String token, String deviceId) {
+	public AwningStatResult getAwningStat( String deviceId) {
 		// /user/device/view/{}, AwningStatResult는 반환값용 enum이다.
 		if(isInvalidString(deviceId))
 			return AwningStatResult.DEVICE_ID_NULL_OR_BLANK;
@@ -155,7 +161,7 @@ public class AwningServiceImpl implements AwningService {
 
 
 	@Override
-	public List getAwningLStatList(String token,HashMap<String,String> paramMap)  {// /user/device/view
+	public List getAwningLStatList(HashMap<String,String> paramMap)  {// /user/device/view
 		List<AwningDefaultOnly> dlist=awningDefaultRepository.findAll();
 		List<AwningLocationOnly> llist=awningLocationRepository.findAll();
 		List<AwningStatusOnly> slist=awningStatusRepository.findAll();
@@ -216,7 +222,7 @@ public class AwningServiceImpl implements AwningService {
 	
 	@Override
 	@Transactional
-	public int deleteAwningSeleted(String token, List<String> list) {
+	public int deleteAwningSeleted( List<String> list) {
 		System.out.println(list+"=list");
 		try {
 			
@@ -232,18 +238,55 @@ public class AwningServiceImpl implements AwningService {
 	}
 	
 	@Override
-	public void addAwningLog(String token, HashMap<String, String> unknownObject) {
-		// TODO Auto-generated method stub
-		unknownObject.get("deviceId");
+	public void addAwningLog(AwningStatusLog awningStatusLog) {
+		
+		
+		List<AwningStatusLog> statusLogs= awningStatusLogRepository.findByDeviceId(awningStatusLog.getDeviceId());
+		if(statusLogs==null) {
+			System.out.println("--not found--");
+			return;
+		}
+		
+		
+		
+		System.out.println(awningStatusLog);
+//		awningStatusLogRepository.save(awningStatusLog);
 	}
-	
+	@Override
+	public HashMap<String, Integer> quickSummaryReply() {
+		// TODO Auto-generated method stub
+		HashMap<String, Integer> failureSummary=new HashMap<>();
+		failureSummary.put("배터리정상", awningStatusRepository.findByBatteryCondition("normal").size());
+		failureSummary.put("배터리경고", awningStatusRepository.findByBatteryCondition("warning").size());
+		failureSummary.put("배터리고장", awningStatusRepository.findByBatteryCondition("crush").size());
+		
+		failureSummary.put("모터고장", awningStatusRepository.findByMotorCondition("crush").size());
+		failureSummary.put("모터경고", awningStatusRepository.findByMotorCondition("warning").size());
+		failureSummary.put("모터정상", awningStatusRepository.findByMotorCondition("normal").size());
+		
+		failureSummary.put("조명고장", awningStatusRepository.findByLightingCondition("crush").size());
+		failureSummary.put("조명경고", awningStatusRepository.findByLightingCondition("warning").size());
+		failureSummary.put("조명정상", awningStatusRepository.findByLightingCondition("normal").size());
+		
+		List<AwningStatusOnly> list=awningStatusRepository.findAll();
+		int listcount=0;
+		for(AwningStatusOnly awningStatusOnly:list) {
+			if(awningStatusOnly.isNormal())
+				listcount+=1;
+		}
+		
+		failureSummary.put("총설치댓수", awningStatusRepository.findAll().size());
+		failureSummary.put("정상동작댓수", listcount);
+		failureSummary.put("차양막가동댓수", awningStatusRepository.findByStatusAwningExpand("on").size());
+		return failureSummary;
+	}
 	//이하 메소드
 	private void setAwningDeviceView(AwningDefaultOnly awningDefaultOnly, AwningLocationOnly awningLocationOnly,
 			AwningStatusOnly awningStatusOnly,  ContractDeta contractDeta,
 			AwningDeviceView awningDeviceView) {
 		// TODO Auto-generated method stub
 		awningDeviceView.setAwningId(awningDefaultOnly.getAwningId());
-		awningDeviceView.setAwningMessage(awningStatusOnly.getAwningMessage());
+		awningDeviceView.setMotorMessage(awningStatusOnly.getMotorMessage());
 		awningDeviceView.setAwningOpenScheduleTime(awningDefaultOnly.getAwningOpenScheduleTime());
 		awningDeviceView.setAwningOpenTimeLeft(awningDefaultOnly.getAwningOpenTimeLeft());
 		awningDeviceView.setAwningOpenTimeRight(awningDefaultOnly.getAwningOpenTimeRight());
@@ -477,35 +520,23 @@ public class AwningServiceImpl implements AwningService {
 
 
 	@Override
-	public HashMap<String, Integer> quickSummaryReply(String token) {
+	@Transactional
+	public int saveEvent(Event event) {
 		// TODO Auto-generated method stub
-		HashMap<String, Integer> failureSummary=new HashMap<>();
-		failureSummary.put("배터리정상", awningStatusRepository.findByBatteryCondition("normal").size());
-		failureSummary.put("배터리경고", awningStatusRepository.findByBatteryCondition("warning").size());
-		failureSummary.put("배터리고장", awningStatusRepository.findByBatteryCondition("crush").size());
-		
-		failureSummary.put("모터고장", awningStatusRepository.findByMotorCondition("crush").size());
-		failureSummary.put("모터경고", awningStatusRepository.findByMotorCondition("warning").size());
-		failureSummary.put("모터정상", awningStatusRepository.findByMotorCondition("normal").size());
-		
-		failureSummary.put("조명고장", awningStatusRepository.findByLightingCondition("crush").size());
-		failureSummary.put("조명경고", awningStatusRepository.findByLightingCondition("warning").size());
-		failureSummary.put("조명정상", awningStatusRepository.findByLightingCondition("normal").size());
-		
-		List<AwningStatusOnly> list=awningStatusRepository.findAll();
-		int listcount=0;
-		for(AwningStatusOnly awningStatusOnly:list) {
-			if(awningStatusOnly.getBatteryCondition().compareTo("normal")==0)
-				if(awningStatusOnly.getLightingCondition().compareTo("normal")==0)
-					if(awningStatusOnly.getMotorCondition().compareTo("normal")==0)
-						listcount+=1;
-		}
-		
-		failureSummary.put("총설치댓수", awningStatusRepository.findAll().size());
-		failureSummary.put("정상동작댓수", listcount);
-		failureSummary.put("차양막가동댓수", awningStatusRepository.findByStatusAwningExpand("on").size());
-		return failureSummary;
+		eventRepository.save(event);
+		EventHistory eventHistory=EventHistory.builder()
+		.awningId(event.getAwningId())
+		.eventType(event.getEventType())
+		.eventType2(event.getEventType2())
+		.eventType3(event.getEventType3())
+		.Type(event.getType()).build();
+		eventHisRepository.save(eventHistory);
+		return 0;
 	}
+
+
+
+	
 
 
 
