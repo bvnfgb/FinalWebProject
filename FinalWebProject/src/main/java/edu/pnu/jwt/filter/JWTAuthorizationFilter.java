@@ -29,6 +29,12 @@ public class JWTAuthorizationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		String srcToken=request.getHeader("Authorization");
+		if(srcToken==null ) {
+			
+			srcToken=request.getParameter("Authorization");
+		}
+		
+		
 		if(srcToken==null||!srcToken.startsWith("Bearer ")) {
 			filterChain.doFilter(request, response);
 			return;

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import edu.pnu.controller.AwningController;
 import edu.pnu.domain.AwningStatusLog;
 import edu.pnu.domain.Event;
-import edu.pnu.service.AwningService;
 
 @Component
 public class ReportingEmulator {
@@ -32,7 +31,33 @@ public class ReportingEmulator {
 				.eventType("변경 없음")
 				.eventType2("배터리 상태 정상")
 				.eventType3("모터 상태 정상")
-				.type("보냄")
+				.type("받음")
+				.build();
+		
+		awningController.sendText(event);
+	}
+	@Scheduled(fixedRate = 300500)
+	public void event1() {
+		System.out.println("event");
+		Event event=Event.builder()
+				.awningId(1)
+				.eventType("경고")
+				.eventType2("배터리 상태 고장")
+				.eventType3("모터 상태 고장")
+				.type("받음")
+				.build();
+		
+		awningController.sendText(event);
+	}
+	@Scheduled(fixedRate = 140900)
+	public void event2() {
+		System.out.println("event");
+		Event event=Event.builder()
+				.awningId(1)
+				.eventType("경고")
+				.eventType2("배터리 상태 정상")
+				.eventType3("모터 상태 고장")
+				.type("받음")
 				.build();
 		
 		awningController.sendText(event);

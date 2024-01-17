@@ -93,7 +93,7 @@ public class AwningController {
 	@PostMapping("/user/event/receive")
 	public ResponseEntity<?> sendText(@RequestBody Event event ){
 		int sendResult=webSocketService.sendEvent(event);
-		int saveResult=awningService.saveEvent(event);
+		awningService.saveEvent(event);
 		if(sendResult!=0)
 			return ResponseEntity.internalServerError().body("Sending ER");
 		return ResponseEntity.ok("Sending success");
