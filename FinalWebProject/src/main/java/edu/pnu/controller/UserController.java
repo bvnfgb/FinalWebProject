@@ -33,6 +33,7 @@ public class UserController {
 	@DeleteMapping("/admin/use/del")
 	public ResponseEntity<?> delUser(@RequestHeader("Authorization")String token,@RequestBody String loginId){
 		int delResult=userService.delUser(token, loginId);
+		
 		switch (delResult) {
 		case 1:
 			return ResponseEntity.noContent().build();
@@ -46,8 +47,10 @@ public class UserController {
 		List<Member> list=userService.getUserList(token);
 		if(list==null)
 			return ResponseEntity.noContent().build();
+		
 		return ResponseEntity.ok(list);
 	}
+	
 	@PutMapping("/admin/use/mod")
 	public ResponseEntity<?> modUserList(@RequestHeader("Authorization")String token,@RequestBody Member member){
 		int modResult=userService.addUser(token, member,AddModify.MODIFY);

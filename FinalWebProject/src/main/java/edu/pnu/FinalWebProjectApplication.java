@@ -7,15 +7,20 @@ import java.util.TimeZone;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @SpringBootApplication  
 public class FinalWebProjectApplication {
-
+protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+			return builder.sources(FinalWebProjectApplication.class);
+		}
 	public static void main(String[] args)  {
 		TimeZone.setDefault(TimeZone.getTimeZone(ZoneId.of("Asia/Tokyo")));
 		@SuppressWarnings("unused")
 		OffsetDateTime offsetDateTime = OffsetDateTime.now(ZoneOffset.ofHours(9));
+		
+		
 		SpringApplication.run(FinalWebProjectApplication.class, args);
 		
 	}

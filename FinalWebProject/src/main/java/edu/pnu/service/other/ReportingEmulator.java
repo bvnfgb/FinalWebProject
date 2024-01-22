@@ -23,7 +23,7 @@ public class ReportingEmulator {
 				.controlId(10010).build();
 		awningController.awnngRcvd(awningStatusLog);
 	}
-	@Scheduled(fixedRate = 30000)
+	@Scheduled(fixedRate = 3000)
 	public void event() {
 		System.out.println("event");
 		Event event=Event.builder()

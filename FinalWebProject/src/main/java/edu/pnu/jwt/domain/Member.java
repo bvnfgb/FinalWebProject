@@ -2,6 +2,8 @@
 package edu.pnu.jwt.domain;
 
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.Date;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,12 +19,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @RequiredArgsConstructor
+@ToString
+@Setter
 @Table(name="user")
 public class Member {
 	//DB에 저장되지않는 임시항목 2개
@@ -33,11 +39,10 @@ public class Member {
 	
 	
 	
-	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id 
     private Integer userId;
 
-    @Column(length = 20, nullable = false)
+    @Column(length = 20, nullable = false,unique = true)
     private String loginId;
 
     @Column(length = 100, nullable = false)
@@ -61,11 +66,13 @@ public class Member {
     private ManageType manageType;
 
     @Column(columnDefinition = "varchar(10) default 'enable'", nullable = false)
-    private String userStat;
+    @Builder.Default
+    private String userStat="on";
 
     @Column(nullable = false,
     		columnDefinition = "timestamp default current_timestamp")
-    private Timestamp userCreateDate;
+    @Builder.Default
+    private Timestamp userCreateDate=new Timestamp(System.currentTimeMillis()); 
 
     @Column(nullable = false)
     private Integer manageArea;

@@ -50,6 +50,7 @@ public class ReservationServiceImpl implements ReservationService {
 				.finshDate(detail.getFinshDate()!=null?detail.getFinshDate():null)
 				.reservationItems(detail.getReservationItems())
 				.reservationMethod(detail.getReservationMethod())
+				.repeatDayTime(detail.getRepeatDayTime()!=null?detail.getRepeatDayTime():null)
 				.build();
 		return detail;
 	}
